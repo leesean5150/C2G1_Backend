@@ -13,7 +13,7 @@ git clone https://github.com/leesean5150/C2G1_Backend.git
 ```
 
 ### Setting Up Configuration
-Create a new .env file for the server folder using the .env.sample as a tempalte. For email reset link, navigate to Google Account settings, search for app passwords and create a new app. The password is the password to be put into the .env file.
+Create a new .env file for the server folder using the .env.sample as a template. For email reset link, navigate to Google Account settings, search for app passwords and create a new app. The password is the app password, not email password.
 
 ### Run Server
 
