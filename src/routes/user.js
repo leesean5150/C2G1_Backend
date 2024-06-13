@@ -11,9 +11,9 @@ router.post("/signup", UserController.signup);
 
 router.post("/login", UserController.login);
 
-router.post("/forgot-password",UserController.forgotpassword);
+router.post("/forgot-password", UserController.forgotpassword);
 
-router.post("/reset-password/:token",UserController.resetpassword);
+router.post("/reset-password/:token", UserController.resetpassword);
 
 router.get("/verify", UserController.verifyuser, async (req, res) => {
   return res.json({ status: true, message: "Authorized" });
