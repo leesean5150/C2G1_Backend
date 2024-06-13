@@ -1,4 +1,4 @@
-# ReactNodeProject
+# C2G1_Backend
 A project running a dockerized Node.js backend and MongoDB database for Dell.
 
 ## Requirements
