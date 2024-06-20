@@ -16,9 +16,13 @@ git clone https://github.com/leesean5150/C2G1_Backend.git
 Create a new .env file for the server folder using the .env.sample as a template. For email reset link, navigate to Google Account settings, search for app passwords and create a new app. The password is the app password, not email password.
 
 ### Run Server
-
+#### First initialisation
 ```shell
 docker compose up --build
+```
+#### Subsequent initialisation
+```shell
+docker compose up
 ```
 
 Open [http://localhost:5000](http://localhost:5000) to connect to backend api endpoints.
