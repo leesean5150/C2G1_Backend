@@ -128,6 +128,11 @@ async function verifyuser(req, res, next) {
       return res.json({ status: false, message: "Unauthorized" });
     }
     const decoded = await jwt.verify(token, process.env.KEY);
+    const verifiedUser = await User.findOne({ username: decoded.username }).exec();
+    req.user = {
+      id: verifiedUser.id,
+      role: verifiedUser.role     
+    };
     next();
   } catch (err) {
     return res.json({ status: false, message: "Unauthorized" });
