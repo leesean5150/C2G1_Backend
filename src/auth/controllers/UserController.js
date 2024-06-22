@@ -23,6 +23,7 @@ async function signup(req, res) {
       username,
       email,
       password: hashpassword,
+      role: "client"
     });
 
     await newUser.save();

@@ -1,8 +1,6 @@
 import express from "express";
-import bcrypt from "bcryptjs";
 import nodeMailer from "nodemailer";
 
-import { User } from "../models/User.js";
 import UserController from "../controllers/UserController.js";
 
 const router = express.Router();
