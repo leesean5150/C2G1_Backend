@@ -16,7 +16,7 @@ const connectToDB = async () => {
     const existingSuperUser = await User.findOne({ role: "admin" });
     if (existingSuperUser) {
       console.log("Superuser already exists.");
-      return; 
+      return;
     }
     const hashpassword = await bcrypt.hash(process.env.SUPERUSER_PASSWORD, 10);
     const superUser = new User({
