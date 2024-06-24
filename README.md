@@ -20,7 +20,7 @@ Create a new .env file for the server folder using the .env.sample as a template
 ```shell
 docker compose up --build
 ```
-#### Subsequent initialisation
+#### Subsequent runs
 ```shell
 docker compose up
 ```
