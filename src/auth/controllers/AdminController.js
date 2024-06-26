@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 import { User } from "../models/User.js";
 
-// ******************ADMIN FUNCTIONS****************** //
+
 async function verifyAdmin(req,res,next){
   try{
     const token = req.cookies.token;
@@ -23,7 +23,7 @@ async function verifyAdmin(req,res,next){
   }
 }
 
-// get all trainers including inactive ones
+
 async function getAllTrainers(req,res){
   try{
     const trainers = await User.find({role: "trainer"}).exec();
@@ -36,7 +36,7 @@ async function getAllTrainers(req,res){
   }
 }
 
-async function AdminActivateTrainer(req,res){
+async function adminActivateTrainer(req,res){
   try{
     const {id} = req.params;
     const trainer = await User.find({role:"trainer"}).findById(id).exec;
@@ -55,7 +55,7 @@ async function AdminActivateTrainer(req,res){
 }
 
 
-async function AdminUpdateTrainer(req,res){
+async function adminUpdateTrainer(req,res){
   try{
     const {id} = req.params;
     const {username, email, password, active} = req.body;
@@ -69,8 +69,20 @@ async function AdminUpdateTrainer(req,res){
   }
 }
 
-// delete trainer by making them inactive
-async function AdminDeleteTrainer(req,res){
+async function adminCreateTrainer(req,res){
+  try{
+    const {username, email, password} = req.body;
+    const trainer = new User({username, email, password, role: "trainer"});
+    await trainer.save();
+    return res.json({status: true, message: "Trainer added successfully"});
+  }catch(e){
+    console.log(e);
+    return res.status(500).json({message: e});
+  }
+
+}
+
+async function adminDeleteTrainer(req,res){
   try{
     const {id} = req.params;
     await Trainer.findByIdAndUpdate(id, { active: false });
@@ -83,7 +95,8 @@ async function AdminDeleteTrainer(req,res){
 export default {
   verifyAdmin,
   getAllTrainers,
-  AdminActivateTrainer,
-  AdminUpdateTrainer,
-  AdminDeleteTrainer
+  adminActivateTrainer,
+  adminUpdateTrainer,
+  adminDeleteTrainer,
+  adminCreateTrainer
 };
