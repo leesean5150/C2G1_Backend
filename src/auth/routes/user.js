@@ -2,6 +2,7 @@ import express from "express";
 import nodeMailer from "nodemailer";
 
 import UserController from "../controllers/UserController.js";
+import AdminController from "../controllers/AdminController.js";
 
 const router = express.Router();
 
@@ -18,5 +19,12 @@ router.get("/verify", UserController.verifyuser, async (req, res) => {
 });
 
 router.get("/logout", UserController.logout);
+
+// Admin CRUD routes
+router.post("/trainers/activate", verifyAdmin, AdminController.AdminActivateTrainer); 
+router.post("/trainers", verifyAdmin, AdminController.AdminActivateTrainer);
+router.get("/trainers", verifyAdmin, AdminController.getAllTrainers);
+router.put("/trainers/:id", verifyAdmin, AdminController.AdminUpdateTrainer); 
+router.delete("/trainers/:id", verifyAdmin, AdminController.AdminDeleteTrainer); 
 
 export { router as UserRouter };
