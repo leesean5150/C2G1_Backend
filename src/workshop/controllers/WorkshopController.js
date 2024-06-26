@@ -12,7 +12,7 @@ async function createWorkshop(req, res, next) {
     }
 }
 
-async function getWorkshops(req, res, next) {
+async function getAllWorkshops(req, res, next) {
     try {
         const workshops = await Workshop.find();
         return res.status(200).json(workshops);
@@ -22,10 +22,13 @@ async function getWorkshops(req, res, next) {
     }
 }
 
-async function getWorkshopById(req, res, next) {
+async function getWorkshop(req, res) {
     try {
-        const { workshopId } = req.body;
-        const workshop = await Workshop.findOne({ workshopId });
+        const { attributeName, attributeContent } = req.body;
+        const filter = {};
+        filter[attributeName] = attributeContent;
+
+        const workshop = await Workshop.findOne(filter);
         if (!workshop) {
             return res.status(404).json({ message: 'Workshop not found' });
         }
@@ -36,11 +39,14 @@ async function getWorkshopById(req, res, next) {
     }
 }
 
-async function deleteWorkshop(req, res, next) {
+async function deleteWorkshop(req, res) {
     try {
-        const { workshopId } = req.body;
-        const deletedWorkshop = await Workshop.findOneAndDelete({ workshopId });
-        if (!deletedWorkshop) {
+        const { attributeName, attributeContent } = req.body;
+        const filter = {};
+        filter[attributeName] = attributeContent;
+
+        const workshop = await Workshop.findOneAndDelete(filter);
+        if (!workshop) {
             return res.status(404).json({ message: 'Workshop not found' });
         }
         return res.status(204).send();
@@ -50,9 +56,27 @@ async function deleteWorkshop(req, res, next) {
     }
 }
 
+async function searchByAttribute(req, res) {
+    try {
+        const { attributeName, attributeContent } = req.body;
+        const filter = {};
+        filter[attributeName] = attributeContent;
+
+        const workshop = await Workshop.findOne(filter);
+        if (!workshop) {
+            return res.status(404).json({ message: 'No workshop found with the given attribute' });
+        }
+        return res.status(200).json({ id: workshop._id });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Failed to search workshop', error });
+    }
+}
+
 export default {
     createWorkshop: createWorkshop,
-    getWorkshops: getWorkshops,
-    getWorkshopById: getWorkshopById,
-    deleteWorkshop: deleteWorkshop
+    getAllWorkshops: getAllWorkshops,
+    getWorkshop: getWorkshop,
+    deleteWorkshop: deleteWorkshop,
+    searchByAttribute: searchByAttribute
 };

@@ -9,8 +9,8 @@ import config from "../config.js";
 import productRoutes from "./test/routes/products.js";
 import { UserRouter } from "./auth/routes/user.js";
 import { User } from "./auth/models/User.js";
-import { WorkshopRouter } from "./workshopcrd/routes/workshopRoutes.js";
-import { Workshop } from "./workshopcrd/models/Workshop.js";
+import { WorkshopRouter } from "./workshop/routes/workshopRoutes.js";
+import { Workshop } from "./workshop/models/Workshop.js";
 
 const connectToDB = async() => {
     try {
