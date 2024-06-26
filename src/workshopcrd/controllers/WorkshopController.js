@@ -2,8 +2,8 @@ import { Workshop } from '../models/Workshop.js';
 
 async function createWorkshop(req, res, next) {
     try {
-        const { workshopId, trainer, startDate, endDate, abailability, description } = req.body;
-        const newWorkshop = new Workshop({ workshopId, trainer, startDate, endDate, abailability, description });
+        const { workshopId, trainer, startDate, endDate, availability, description } = req.body;
+        const newWorkshop = new Workshop({ workshopId, trainer, startDate, endDate, availability, description });
         const savedWorkshop = await newWorkshop.save();
         return res.status(201).json(savedWorkshop);
     } catch (error) {

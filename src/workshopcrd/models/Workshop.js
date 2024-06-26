@@ -18,7 +18,7 @@ const workshopSchema = new Schema({
         type: Date,
         required: true
     },
-    abailability: {
+    availability: {
         type: Boolean,
         required: true
     },

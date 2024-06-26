@@ -13,8 +13,8 @@ router.post("/forgot-password", UserController.forgotpassword);
 
 router.post("/reset-password/:token", UserController.resetpassword);
 
-router.get("/verify", UserController.verifyuser, async (req, res) => {
-  return res.json({ status: true, message: "Authorized", role: req.user.role });
+router.get("/verify", UserController.verifyuser, async(req, res) => {
+    return res.json({ status: true, message: "Authorized", role: req.user.role });
 });
 
 router.get("/logout", UserController.logout);
