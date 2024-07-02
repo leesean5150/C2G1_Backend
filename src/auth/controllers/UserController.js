@@ -48,7 +48,12 @@ async function login(req, res) {
       return res.status(401).json({ message: "Invalid username" });
     }
     if (loginType !== user.role) {
-      return res.status(401).json({ message: "Credentials provided is not for a " + loginType + " account"});
+      return res
+        .status(401)
+        .json({
+          message:
+            "Credentials provided is not for a " + loginType + " account",
+        });
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
