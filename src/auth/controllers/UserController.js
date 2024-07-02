@@ -45,14 +45,14 @@ async function login(req, res) {
     const { username, password } = req.body;
     const user = await User.findOne({ username }).exec();
     if (!user) {
-      return res.json({ message: "Invalid username" });
+      return res.status(401).json({ message: "Invalid username" });
     }
     if (loginType !== user.role) {
-      return res.json({ message: "Credentials provided is not for a " + loginType + " account"});
+      return res.status(401).json({ message: "Credentials provided is not for a " + loginType + " account"});
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.json({ message: "Invalid password" });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
     const token = jwt.sign({ username: user.username }, process.env.KEY, {
