@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.post('/', WorkshopController.createWorkshop);
 router.get('/', WorkshopController.getAllWorkshops);
-router.get('/get', WorkshopController.getWorkshop);
-router.delete('/del', verifyAdmin, WorkshopController.deleteWorkshop); // verifyAdmin
+router.get('/get/:id', WorkshopController.getOneWorkshop);
+router.get('/search', WorkshopController.searchWorkshops);
+router.delete('/del/:id', verifyAdmin, WorkshopController.deleteWorkshop); // verifyAdmin
 
 export { router as WorkshopRouter };

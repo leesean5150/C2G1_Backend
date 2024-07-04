@@ -1,5 +1,12 @@
 import { Workshop } from '../models/Workshop.js';
 
+/**
+ * createWorkshop()
+ * Input: json object for workshop by body (JSON body)
+ * Output: None
+ * Description: with provided JSON, query db to create a new workshop request.
+ */
+
 async function createWorkshop(req, res, next) {
     try {
         const { workshopId, trainer, startDate, endDate, availability, description } = req.body;
@@ -12,6 +19,12 @@ async function createWorkshop(req, res, next) {
     }
 }
 
+/**
+ * getAllWorkshops()
+ * Input: None
+ * Output: workshops (json)
+ * Description: return all workshop requests (as JSON) existing in db.
+ */
 async function getAllWorkshops(req, res, next) {
     try {
         const workshops = await Workshop.find();
@@ -22,13 +35,18 @@ async function getAllWorkshops(req, res, next) {
     }
 }
 
-async function getWorkshop(req, res) {
-    try {
-        const { attributeName, attributeContent } = req.body;
-        const filter = {};
-        filter[attributeName] = attributeContent;
+/**
+ * getOneWorkshop()
+ * Input: id_ by params (/get/:id)
+ * Output: the workshop (json)
+ * Description: with provided id parameter, find a certain workshop from the database and returns it.
+ */
 
-        const workshop = await Workshop.findOne(filter);
+async function getOneWorkshop(req, res) {
+    try {
+        const { id } = req.params;
+
+        const workshop = await Workshop.findOne({ _id: id });
         if (!workshop) {
             return res.status(404).json({ message: 'Workshop not found' });
         }
@@ -39,13 +57,18 @@ async function getWorkshop(req, res) {
     }
 }
 
+
+/**
+ * deleteWorkshop()
+ * Input: id_ by params (/get/:id)
+ * Output: None
+ * Description: with provided id parameter, find a certain workshop from the database and delete it.
+ */
 async function deleteWorkshop(req, res) {
     try {
-        const { attributeName, attributeContent } = req.body;
-        const filter = {};
-        filter[attributeName] = attributeContent;
+        const { id } = req.params;
 
-        const workshop = await Workshop.findOneAndDelete(filter);
+        const workshop = await Workshop.findOneAndDelete({ _id: id });
         if (!workshop) {
             return res.status(404).json({ message: 'Workshop not found' });
         }
@@ -56,27 +79,33 @@ async function deleteWorkshop(req, res) {
     }
 }
 
-async function searchByAttribute(req, res) {
+/**
+ * searchWorkshops()
+ * Input: json object including {attributeName, attributeContent} by body (JSON body)
+ * Output: the workshops (json)
+ * Description: with provided info, find workshops that matches to the filter from the database and return them.
+ */
+async function searchWorkshops(req, res) {
     try {
         const { attributeName, attributeContent } = req.body;
         const filter = {};
         filter[attributeName] = attributeContent;
 
-        const workshop = await Workshop.findOne(filter);
-        if (!workshop) {
+        const workshops = await Workshop.find(filter);
+        if (workshops.length === 0) {
             return res.status(404).json({ message: 'No workshop found with the given attribute' });
         }
-        return res.status(200).json({ id: workshop._id });
+        return res.status(200).json(workshops);
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: 'Failed to search workshop', error });
+        return res.status(500).json({ message: 'Failed to search workshops', error });
     }
 }
 
 export default {
     createWorkshop: createWorkshop,
     getAllWorkshops: getAllWorkshops,
-    getWorkshop: getWorkshop,
+    getOneWorkshop: getOneWorkshop,
     deleteWorkshop: deleteWorkshop,
-    searchByAttribute: searchByAttribute
+    searchWorkshops: searchWorkshops
 };
