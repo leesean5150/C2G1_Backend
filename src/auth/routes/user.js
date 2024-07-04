@@ -22,9 +22,9 @@ router.get("/logout", UserController.logout);
 
 
 router.patch("/trainers/activate/:id", AdminController.verifyAdmin, AdminController.adminActivateTrainer); 
-router.get("/trainers", AdminController.verifyAdmin, AdminController.getAllTrainers);
-router.patch("/trainers/:id", AdminController.verifyAdmin, AdminController.adminUpdateTrainer); 
-router.patch("/trainers/:id", AdminController.verifyAdmin, AdminController.adminDeleteTrainer); 
-router.post("/trainers/create/:id", AdminController.verifyAdmin, AdminController.adminCreateTrainer);
+router.get("/trainers/list", AdminController.verifyAdmin, AdminController.getAllTrainers);
+router.patch("/trainers/update/:id", AdminController.verifyAdmin, AdminController.adminUpdateTrainer); 
+router.patch("/trainers/delete/:id", AdminController.verifyAdmin, AdminController.adminDeleteTrainer); 
+router.post("/trainers", AdminController.verifyAdmin, AdminController.adminCreateTrainer);
 
 export { router as UserRouter };
