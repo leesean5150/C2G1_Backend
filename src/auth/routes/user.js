@@ -20,10 +20,10 @@ router.get("/verify", UserController.verifyuser, async (req, res) => {
 
 router.get("/logout", UserController.logout);
 
-// Admin CRUD routes
-router.post("/trainers/activate/:id", verifyAdmin, AdminController.adminActivateTrainer); 
+
+router.patch("/trainers/activate/:id", verifyAdmin, AdminController.adminActivateTrainer); 
 router.get("/trainers", verifyAdmin, AdminController.getAllTrainers);
-router.put("/trainers/:Update", verifyAdmin, AdminController.adminUpdateTrainer); 
+router.put("/trainers/:id", verifyAdmin, AdminController.adminUpdateTrainer); 
 router.put("/trainers/:id", verifyAdmin, AdminController.adminDeleteTrainer); 
 router.post("/trainers/create/:id", verifyAdmin, AdminController.adminCreateTrainer);
 

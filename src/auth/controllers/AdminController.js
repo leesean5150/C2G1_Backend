@@ -39,14 +39,14 @@ async function getAllTrainers(req,res){
 async function adminActivateTrainer(req,res){
   try{
     const {id} = req.params;
-    const trainer = await User.find({role:"trainer"}).findById(id).exec;
+    const trainer = await User.findOne({role:"trainer", id:id}).exec();
     if (!trainer){
       return res.status(404).json({message: "Trainer not found"});
     }
-    if (trainer.status === "active"){
-      return res.status(400).json({message: "Trainer is already active"});
+    if (trainer.active === true){
+      return res.status(200).json({message: "Trainer is already active"});
     }
-    trainer.status = "active";
+    trainer.active = true;
     await trainer.save()
     return res.json({status: true, message: "Trainer activated successfully"});
   } catch(e){
