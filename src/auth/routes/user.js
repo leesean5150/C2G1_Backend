@@ -21,10 +21,10 @@ router.get("/verify", UserController.verifyuser, async (req, res) => {
 router.get("/logout", UserController.logout);
 
 
-router.patch("/trainers/activate/:id", verifyAdmin, AdminController.adminActivateTrainer); 
-router.get("/trainers", verifyAdmin, AdminController.getAllTrainers);
-router.put("/trainers/:id", verifyAdmin, AdminController.adminUpdateTrainer); 
-router.put("/trainers/:id", verifyAdmin, AdminController.adminDeleteTrainer); 
-router.post("/trainers/create/:id", verifyAdmin, AdminController.adminCreateTrainer);
+router.patch("/trainers/activate/:id", AdminController.verifyAdmin, AdminController.adminActivateTrainer); 
+router.get("/trainers", AdminController.verifyAdmin, AdminController.getAllTrainers);
+router.patch("/trainers/:id", AdminController.verifyAdmin, AdminController.adminUpdateTrainer); 
+router.patch("/trainers/:id", AdminController.verifyAdmin, AdminController.adminDeleteTrainer); 
+router.post("/trainers/create/:id", AdminController.verifyAdmin, AdminController.adminCreateTrainer);
 
 export { router as UserRouter };
