@@ -1,9 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 
-
 import { User } from "../models/User.js";
-
 
 async function verifyAdmin(req,res,next){
   try{
@@ -23,44 +21,10 @@ async function verifyAdmin(req,res,next){
   }
 }
 
-
 async function getAllTrainers(req,res){
   try{
     const trainers = await User.find({role: "trainer"}).exec();
     return res.json({status: true, trainers});
-  }catch(e){
-    console.log(e);
-    return res.status(500).json({
-      message: e,
-    });
-  }
-}
-
-async function adminActivateTrainer(req,res){
-  try{
-    const {id} = req.params;
-    const trainer = await User.findOne({role:"trainer", id:id}).exec();
-    if (!trainer){
-      return res.status(404).json({message: "Trainer not found"});
-    }
-    if (trainer.active === true){
-      return res.status(200).json({message: "Trainer is already active"});
-    }
-    trainer.active = true;
-    await trainer.save()
-    return res.json({status: true, message: "Trainer activated successfully"});
-  } catch(e){
-    console.log(e);
-    return res.status(500).json({message: e}); }
-}
-
-
-async function adminUpdateTrainer(req,res){
-  try{
-    const {id} = req.params;
-    const {username, email, password, active} = req.body;
-    await User.find({role:"trainer"}).findByIdAndUpdate(id,{username, email, password, active});
-    return res.json({status: true, message: "Trainer updated successfully"});
   }catch(e){
     console.log(e);
     return res.status(500).json({
@@ -82,13 +46,74 @@ async function adminCreateTrainer(req,res){
 
 }
 
-async function adminDeleteTrainer(req,res){
+async function adminActivateTrainer(req,res){
   try{
     const {id} = req.params;
-    await Trainer.findByIdAndUpdate(id, { active: false });
-  }catch(e){
+    const trainer = await User.findOne({role:"trainer", _id:id}).exec();
+    if (!trainer){
+      return res.status(404).json({message: "Trainer not found"});
+    }
+    if (trainer.active === true){
+      return res.status(200).json({message: "Trainer is already active"});
+    }
+    trainer.active = true;
+    await trainer.save()
+    return res.json({status: true, message: "Trainer activated successfully"});
+  } catch(e){
+    console.log(e);
+    return res.status(500).json({message: e}); }
+}
+
+async function adminDeactivateTrainer(req,res){
+  try{
+    const {id} = req.params;
+    const trainer = await User.findOne({role: "trainer", _id: id}).exec();
+    if (!trainer){
+      return res.status(404).json({message: "Trainer not found"});
+    }
+    if (trainer.active === false){
+      return res.status(200).json({message: "Trainer is already deactivated"});
+    }
+    trainer.active = false;
+    await trainer.save();
+    return res.json({status: true, message: "Trainer successfully deactivated"});
+    
+  } catch(e){
     console.log(e);
     return res.status(500).json({message:e});
+  }
+}
+
+async function adminUpdateTrainer(req,res){
+  try{
+    const {id} = req.params;
+    const {username, email, password, active} = req.body;
+    const trainer = await User.findOne({role: "trainer", _id: id}).exec();
+    if (!trainer){
+      return res.status(404).json({message: "Trainer not found"});
+    } 
+    if (active !== undefined){
+      trainer.active = active;
+    } 
+    if (username !== undefined){
+      trainer.username = username;
+    } 
+    if (email !== undefined){
+      trainer.email = email;
+    } 
+    if (password !== undefined){
+      trainer.password = password;
+    }
+    if (Object.keys(req.body).length === 0){
+      return res.status(400).json({message: "No fields to update"});
+    }
+    await trainer.save();
+    return res.json({status: true, message: "Trainer updated successfully"});
+  }catch(e){
+    console.log(e);
+    return res.status(500).json({
+      message: e,
+    });
   }
 }
 
@@ -97,6 +122,6 @@ export default {
   getAllTrainers,
   adminActivateTrainer,
   adminUpdateTrainer,
-  adminDeleteTrainer,
+  adminDeactivateTrainer,
   adminCreateTrainer
 };
