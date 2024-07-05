@@ -8,14 +8,17 @@ import bcrypt from "bcryptjs";
 import config from "../config.js";
 import productRoutes from "./test/routes/products.js";
 import { UserRouter } from "./auth/routes/user.js";
-import { User } from "./auth/models/User.js";
+import { Admin } from "./auth/models/Admin.js";
 import { WorkshopRouter } from "./workshop/routes/workshopRoutes.js";
 import { Workshop } from "./workshop/models/Workshop.js";
 
 const connectToDB = async () => {
   try {
     await mongoose.connect(config.db_uri, {});
-    const existingSuperUser = await User.findOne({ role: "admin" });
+    const existingSuperUser = await Admin.findOne({
+      username: process.env.SUPERUSER_USERNAME,
+      email: process.env.SUPERUSER_EMAIL,
+    });
     if (existingSuperUser) {
       console.log("Superuser already exists.");
     } else {
@@ -23,13 +26,13 @@ const connectToDB = async () => {
         process.env.SUPERUSER_PASSWORD,
         10
       );
-      const superUser = new User({
+      const superAdmin = new Admin({
         username: process.env.SUPERUSER_USERNAME,
         email: process.env.SUPERUSER_EMAIL,
         password: hashpassword_superuser,
-        role: "admin",
+        superAdmin: true,
       });
-      await superUser.save();
+      await superAdmin.save();
     }
     return;
   } catch (e) {

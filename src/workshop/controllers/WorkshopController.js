@@ -134,6 +134,9 @@ async function approveRequest(req, res) {
     if (!workshop) {
       return res.status(404).json({ message: "Workshop not found" });
     }
+    if (workshop.status === "approved") {
+      return res.status(200).json({ message: "Workshop is already approved" });
+    }
 
     workshop.status = "approved";
     workshop.rejectReason = "N/A";
@@ -157,6 +160,9 @@ async function rejectRequest(req, res) {
     const workshop = await Workshop.findOne({ _id: id });
     if (!workshop) {
       return res.status(404).json({ message: "Workshop not found" });
+    }
+    if (workshop.status === "rejected") {
+      return res.status(200).json({ message: "Workshop is already rejected" });
     }
 
     workshop.status = "rejected";

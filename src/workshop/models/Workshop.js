@@ -6,6 +6,7 @@ const workshopSchema = new Schema(
     workshopId: {
       type: String,
       required: true,
+      unique: true,
     },
     trainer: {
       type: String,

@@ -27,17 +27,21 @@ router.patch(
   verifyAdmin,
   AdminController.adminActivateTrainer
 );
+
 router.get("/trainers/list", verifyAdmin, AdminController.getAllTrainers);
+
 router.patch(
   "/trainers/update/:id",
   verifyAdmin,
   AdminController.adminUpdateTrainer
 );
+
 router.patch(
   "/trainers/delete/:id",
   verifyAdmin,
   AdminController.adminDeactivateTrainer
 );
+
 router.post("/trainers", verifyAdmin, AdminController.adminCreateTrainer);
 
 export { router as UserRouter };
