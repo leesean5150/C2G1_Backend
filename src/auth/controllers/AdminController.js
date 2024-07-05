@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 import { Admin } from "../models/Admin.js";
 import { Trainer } from "../models/Trainer.js";
 
+/**
+ * getAllTrainers()
+ * Input: None
+ * Output: JSON trainers list
+ * Description: return all trainer (as JSON) existing in db.
+ */
 async function getAllTrainers(req, res) {
   try {
     const trainers = await Trainer.find({ role: "trainer" }).exec();
@@ -14,7 +20,12 @@ async function getAllTrainers(req, res) {
     });
   }
 }
-
+/**
+ * adminCreateTrainer
+ * Input: json object for trainer by body (JSON body)
+ * Output: None
+ * Description: with provided JSON, query db to create a new trainer.
+ */
 async function adminCreateTrainer(req, res) {
   try {
     const { username, email, password } = req.body;
@@ -34,7 +45,12 @@ async function adminCreateTrainer(req, res) {
     return res.status(500).json({ message: e });
   }
 }
-
+/**
+ * adminActivateTrainer()
+ * Input: id_ by params (/get/:id)
+ * Output: None
+ * Description: with provided id parameter, find a certain trainer and update active status to true.
+ */
 async function adminActivateTrainer(req, res) {
   try {
     const { id } = req.params;
@@ -56,7 +72,12 @@ async function adminActivateTrainer(req, res) {
     return res.status(500).json({ message: e });
   }
 }
-
+/**
+ * adminDeactivateTrainer()
+ * Input: id_ by params (/get/:id)
+ * Output: None
+ * Description: with provided id parameter, find a certain trainer and update active status to false.
+ */
 async function adminDeactivateTrainer(req, res) {
   try {
     const { id } = req.params;
@@ -80,7 +101,12 @@ async function adminDeactivateTrainer(req, res) {
     return res.status(500).json({ message: e });
   }
 }
-
+/**
+ * adminDeactivateTrainer()
+ * Input: id_ by params (/get/:id) and json object for trainer by body (JSON body)
+ * Output: None
+ * Description: with provided id parameter, find a certain trainer and update the related fields.
+ */
 async function adminUpdateTrainer(req, res) {
   try {
     const { id } = req.params;
