@@ -40,22 +40,20 @@ async function signup(req, res) {
 }
 
 async function login(req, res) {
-  try {
-    const { loginType } = req.params;
-    const { username, password } = req.body;
-    const user = await User.findOne({ username }).exec();
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username" });
-    }
-    if (loginType !== user.role) {
-      return res.status(401).json({
-        message: "Credentials provided is not for a " + loginType + " account",
-      });
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" });
-    }
+    try {
+        const { loginType } = req.params;
+        const { username, password } = req.body;
+        const user = await User.findOne({ username }).exec();
+        if (!user) {
+            return res.json({ message: "Invalid username" });
+        }
+        if (loginType !== user.role) {
+            return res.json({ message: "Credentials provided is not for a " + loginType + " account" });
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.json({ message: "Invalid password" });
+        }
 
         const token = jwt.sign({ username: user.username }, process.env.KEY, {
             expiresIn: "1h",
