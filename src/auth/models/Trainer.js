@@ -6,7 +6,7 @@ const trainerSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, default: "trainer" },
   active: { type: Boolean, default: true },
-  workshopId: { type: String, default: "" },
+  workshopId: { type: Number, default: "" },
   startTime: { type: String, default: "" },
   endTime: { type: String, default: "" },
   workshopDescription: { type: String, default: "" },
