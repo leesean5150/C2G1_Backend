@@ -40,22 +40,22 @@ async function signup(req, res) {
 }
 
 async function login(req, res) {
-  try {
-    const { loginType } = req.params;
-    const { username, password } = req.body;
-    const user = await User.findOne({ username }).exec();
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username" });
-    }
-    if (loginType !== user.role) {
-      return res.status(401).json({
-        message: "Credentials provided is not for a " + loginType + " account",
-      });
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" });
-    }
+    try {
+        const { loginType } = req.params;
+        const { username, password } = req.body;
+        const user = await User.findOne({ username }).exec();
+        if (!user) {
+            return res.status(401).json({ message: "Invalid username" });
+        }
+        if (loginType !== user.role) {
+            return res.status(401).json({
+                message: "Credentials provided is not for a " + loginType + " account",
+            });
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Invalid password" });
+        }
 
         const token = jwt.sign({ username: user.username }, process.env.KEY, {
             expiresIn: "1h",
@@ -127,6 +127,7 @@ async function resetpassword(req, res) {
     }
 }
 
+/*
 async function verifyuser(req, res, next) {
     try {
         const token = req.cookies.token;
@@ -146,6 +147,7 @@ async function verifyuser(req, res, next) {
         return res.json({ status: false, message: "Unauthorized" });
     }
 }
+*/
 
 async function logout(req, res) {
     try {
@@ -161,6 +163,5 @@ export default {
     login,
     forgotpassword,
     resetpassword,
-    verifyuser,
     logout,
 };
