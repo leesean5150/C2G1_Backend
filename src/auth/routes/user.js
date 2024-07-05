@@ -1,5 +1,4 @@
 import express from "express";
-import nodeMailer from "nodemailer";
 
 import UserController from "../controllers/UserController.js";
 import AdminController from "../controllers/AdminController.js";
@@ -17,17 +16,28 @@ router.post("/forgot-password", UserController.forgotpassword);
 
 router.post("/reset-password/:token", UserController.resetpassword);
 
-router.get("/verify", verifyLoggedIn, async(req, res) => {
-    return res.json({ status: true, message: "Authorized", role: req.user.role });
+router.get("/verify", verifyLoggedIn, async (req, res) => {
+  return res.json({ status: true, message: "Authorized", role: req.user.role });
 });
 
 router.get("/logout", UserController.logout);
 
-
-router.patch("/trainers/activate/:id", verifyAdmin, AdminController.adminActivateTrainer);
+router.patch(
+  "/trainers/activate/:id",
+  verifyAdmin,
+  AdminController.adminActivateTrainer
+);
 router.get("/trainers/list", verifyAdmin, AdminController.getAllTrainers);
-router.patch("/trainers/update/:id", verifyAdmin, AdminController.adminUpdateTrainer);
-router.patch("/trainers/delete/:id", verifyAdmin, AdminController.adminDeactivateTrainer);
+router.patch(
+  "/trainers/update/:id",
+  verifyAdmin,
+  AdminController.adminUpdateTrainer
+);
+router.patch(
+  "/trainers/delete/:id",
+  verifyAdmin,
+  AdminController.adminDeactivateTrainer
+);
 router.post("/trainers", verifyAdmin, AdminController.adminCreateTrainer);
 
 export { router as UserRouter };
