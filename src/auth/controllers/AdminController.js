@@ -83,7 +83,6 @@ async function adminDeactivateTrainer(req, res) {
 
 async function adminUpdateTrainer(req, res) {
   try {
-    console.log("here1");
     const { id } = req.params;
     const {
       username,
@@ -96,7 +95,6 @@ async function adminUpdateTrainer(req, res) {
       workshopDescription,
     } = req.body;
     const trainer = await Trainer.findOne({ _id: id }).exec();
-    console.log("found trainer" + trainer.username);
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
     }
