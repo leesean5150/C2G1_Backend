@@ -1,5 +1,8 @@
 import jwt from "jsonwebtoken";
-import { User } from "../auth/models/User.js";
+
+import { Admin } from "../auth/models/Admin.js";
+import { Trainer } from "../auth/models/Trainer.js";
+import { Client } from "../auth/models/Client.js";
 
 async function verifyLoggedIn(req, res, next) {
   try {
@@ -9,17 +12,24 @@ async function verifyLoggedIn(req, res, next) {
     }
 
     const decoded = jwt.verify(token, process.env.KEY);
-    const verifiedUser = await User.findOne({
-      username: decoded.username,
-    }).exec();
-    if (!verifiedUser) {
+    const models = [Admin, Trainer, Client];
+    let verifiedAccount = null;
+    for (const model of models) {
+      verifiedAccount = await model
+        .findOne({
+          username: decoded.username,
+        })
+        .exec();
+      if (verifiedAccount) break;
+    }
+    if (!verifiedAccount) {
       return res.status(401).json({ status: false, message: "Unauthorized" });
     }
 
     req.user = {
-      id: verifiedUser.id,
-      username: verifiedUser.username,
-      role: verifiedUser.role,
+      id: verifiedAccount.id,
+      username: verifiedAccount.username,
+      role: verifiedAccount.role,
     };
     next();
   } catch (err) {

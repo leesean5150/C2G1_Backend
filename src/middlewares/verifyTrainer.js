@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { User } from "../auth/models/User.js";
+import { Trainer } from "../auth/models/Trainer.js";
 
 async function verifyTrainer(req, res, next) {
   try {
@@ -9,20 +9,20 @@ async function verifyTrainer(req, res, next) {
     }
 
     const decoded = jwt.verify(token, process.env.KEY);
-    const verifiedUser = await User.findOne({
+    const verifiedTrainer = await Trainer.findOne({
       username: decoded.username,
     }).exec();
-    if (!verifiedUser) {
+    if (!verifiedTrainer) {
       return res.json({ status: false, message: "Unauthorized" });
     }
 
-    if (verifiedUser.role !== "trainer") {
+    if (verifiedTrainer.role !== "trainer") {
       return res.json({ status: false, message: "Forbidden" });
     }
 
     req.user = {
-      id: verifiedUser.id,
-      role: verifiedUser.role,
+      id: verifiedTrainer.id,
+      role: verifiedTrainer.role,
     };
     next();
   } catch (err) {
