@@ -102,10 +102,56 @@ async function searchWorkshops(req, res) {
     }
 }
 
+async function approveRequest(req, res) {
+    try {
+        const { id } = req.params;
+
+        const workshop = await Workshop.findOne({ _id: id });
+        if (!workshop) {
+            return res.status(404).json({ message: 'Workshop not found' });
+        }
+
+        workshop.status = "approved";
+        workshop.rejectReason = "N/A";
+
+        await workshop.save();
+
+        return res.status(200).json(workshop);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Failed to retrieve workshop', error });
+    }
+}
+
+async function rejectRequest(req, res) {
+    try {
+        const { rejectReason } = req.body;
+        const { id } = req.params;
+
+        const workshop = await Workshop.findOne({ _id: id });
+        if (!workshop) {
+            return res.status(404).json({ message: 'Workshop not found' });
+        }
+
+        workshop.status = "rejected";
+        workshop.rejectReason = rejectReason;
+
+        await workshop.save();
+
+        return res.status(200).json(workshop);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Failed to retrieve workshop', error });
+    }
+}
+
+
 export default {
     createWorkshop: createWorkshop,
     getAllWorkshops: getAllWorkshops,
     getOneWorkshop: getOneWorkshop,
     deleteWorkshop: deleteWorkshop,
-    searchWorkshops: searchWorkshops
+    searchWorkshops: searchWorkshops,
+    approveRequest: approveRequest,
+    rejectRequest: rejectRequest
 };
