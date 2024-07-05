@@ -2,13 +2,15 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodeMailer from "nodemailer";
 
-import { User } from "../models/User.js";
+import { Client } from "../models/Client.js";
+import { Trainer } from "../models/Trainer.js";
+import { Admin } from "../models/Admin.js";
 
 async function signup(req, res) {
   try {
     const { username, email, password } = req.body;
-    const uniqueUsername = await User.findOne({ username }).exec();
-    const uniqueEmail = await User.findOne({ email }).exec();
+    const uniqueUsername = await Client.findOne({ username }).exec();
+    const uniqueEmail = await Client.findOne({ email }).exec();
 
     if (uniqueUsername) {
       return res.json({ message: "Username is already in use" });
@@ -18,14 +20,13 @@ async function signup(req, res) {
     }
 
     const hashpassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
+    const newClient = new Client({
       username,
       email,
       password: hashpassword,
-      role: "client",
     });
 
-    await newUser.save();
+    await newClient.save();
     return res.json({
       status: true,
       message: "record registered successfully",
@@ -42,7 +43,21 @@ async function login(req, res) {
   try {
     const { loginType } = req.params;
     const { username, password } = req.body;
-    const user = await User.findOne({ username }).exec();
+    let userModel;
+    switch (loginType) {
+      case "client":
+        userModel = Client;
+        break;
+      case "trainer":
+        userModel = Trainer;
+        break;
+      case "admin":
+        userModel = Admin;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid login type" });
+    }
+    const user = await userModel.findOne({ username }).exec();
     if (!user) {
       return res.status(401).json({ message: "Invalid username" });
     }
@@ -73,8 +88,8 @@ async function login(req, res) {
 async function forgotpassword(req, res) {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email }).exec();
-    if (!user) {
+    const client = await Client.findOne({ email }).exec();
+    if (!client) {
       return res.json({ message: "Invalid email" });
     }
 
@@ -119,7 +134,7 @@ async function resetpassword(req, res) {
     const decoded = jwt.verify(token, process.env.KEY);
     const id = decoded.id;
     const hashPassword = await bcrypt.hash(password, 10);
-    await User.findByIdAndUpdate({ _id: id }, { password: hashPassword });
+    await Client.findByIdAndUpdate({ _id: id }, { password: hashPassword });
     return res.json({ status: true, message: "Password has been updated" });
   } catch (err) {
     return res.json({ status: false, message: "Invalid token" });
