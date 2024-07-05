@@ -8,7 +8,7 @@ const workshopSchema = new Schema({
     },
     trainer: {
         type: String,
-        required: true
+        required: false
     },
     startDate: {
         type: Date,
@@ -25,9 +25,25 @@ const workshopSchema = new Schema({
     description: {
         type: String,
         required: false
+    },
+    status: {
+        type: String,
+        default: "submitted"
+    },
+    rejectReason: {
+        type: String,
+        default: ""
     }
 }, {
     timestamps: true
+});
+
+workshopSchema.pre('save', function(next) {
+    if (this.isNew) {
+        this.status = "submitted";
+        this.rejectReason = "";
+    }
+    next();
 });
 
 const WorkshopModel = mongoose.model('Workshop', workshopSchema);
