@@ -36,6 +36,7 @@ const workshopSchema = new Schema(
       type: String,
       default: "",
     },
+    trainers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Trainer" }],
   },
   {
     timestamps: true,

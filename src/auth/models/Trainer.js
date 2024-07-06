@@ -10,6 +10,7 @@ const trainerSchema = new mongoose.Schema({
   startTime: { type: String, default: "" },
   endTime: { type: String, default: "" },
   workshopDescription: { type: String, default: "" },
+  workshops: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workshop" }],
 });
 
 const TrainerModel = mongoose.model("Trainer", trainerSchema);
