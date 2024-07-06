@@ -1,4 +1,5 @@
 import { Workshop } from "../models/Workshop.js";
+import { Trainer } from "../../auth/models/Trainer.js";
 
 /**
  * createWorkshop()
@@ -126,6 +127,54 @@ async function searchWorkshops(req, res) {
   }
 }
 
+/**
+ * addTrainer()
+ * Input: _id of trainer object
+ * Output: None
+ * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
+ */
+async function addTrainer(req, res) {
+  try {
+    const { trainerId, workshopId } = req.body;
+    // console log trainerId and include string to show the value
+    console.log(`trainerId: ${trainerId}`);
+    // console log workshop id
+    console.log(`workshopId: ${workshopId}`);
+
+    // Update the Workshop document to include the trainerId in its trainers array
+    const updatedWorkshop = await Workshop.findByIdAndUpdate(
+      workshopId,
+      { $addToSet: { trainers: trainerId } }, // Use $addToSet to avoid duplicates
+      { new: true }
+    );
+
+    if (!updatedWorkshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    // Update the Trainer document to include the workshopId in its workshops array
+    const updatedTrainer = await Trainer.findByIdAndUpdate(
+      trainerId,
+      { $addToSet: { workshops: workshopId } }, // Use $addToSet to avoid duplicates
+      { new: true }
+    );
+
+    if (!updatedTrainer) {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
+    // Optionally, send back the updated documents or a success message
+    return res.status(200).json({
+      message: "Successfully added trainer to workshop and vice versa",
+      updatedWorkshop,
+      updatedTrainer,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to add trainer", error });
+  }
+}
+
 async function approveRequest(req, res) {
   try {
     const { id } = req.params;
@@ -185,6 +234,7 @@ export default {
   getOneWorkshop: getOneWorkshop,
   deleteWorkshop: deleteWorkshop,
   searchWorkshops: searchWorkshops,
+  addTrainer: addTrainer,
   approveRequest: approveRequest,
   rejectRequest: rejectRequest,
 };
