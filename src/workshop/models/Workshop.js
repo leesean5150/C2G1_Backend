@@ -8,10 +8,6 @@ const workshopSchema = new Schema(
       required: true,
       unique: true,
     },
-    trainer: {
-      type: String,
-      required: false,
-    },
     startDate: {
       type: Date,
       required: true,
