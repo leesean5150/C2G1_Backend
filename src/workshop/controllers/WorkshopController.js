@@ -9,17 +9,10 @@ import { Trainer } from "../../auth/models/Trainer.js";
  */
 async function createWorkshop(req, res, next) {
   try {
-    const {
-      workshopId,
-      trainer,
-      startDate,
-      endDate,
-      availability,
-      description,
-    } = req.body;
+    const { workshopId, startDate, endDate, availability, description } =
+      req.body;
     const newWorkshop = new Workshop({
       workshopId,
-      trainer,
       startDate,
       endDate,
       availability,
