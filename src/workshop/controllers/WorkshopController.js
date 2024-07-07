@@ -1,4 +1,5 @@
 import { Workshop } from "../models/Workshop.js";
+import { Trainer } from "../../auth/models/Trainer.js";
 
 /**
  * createWorkshop()
@@ -8,17 +9,10 @@ import { Workshop } from "../models/Workshop.js";
  */
 async function createWorkshop(req, res, next) {
   try {
-    const {
-      workshopId,
-      trainer,
-      startDate,
-      endDate,
-      availability,
-      description,
-    } = req.body;
+    const { workshopId, startDate, endDate, availability, description } =
+      req.body;
     const newWorkshop = new Workshop({
       workshopId,
-      trainer,
       startDate,
       endDate,
       availability,
@@ -126,6 +120,57 @@ async function searchWorkshops(req, res) {
   }
 }
 
+/**
+ * addTrainer()
+ * Input: _id of trainer and workshop object
+ * Output: None
+ * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
+ */
+async function addTrainer(req, res) {
+  try {
+    const { trainerId, workshopId } = req.body;
+
+    // Fetch the Trainer document to check if the trainer is active
+    const trainer = await Trainer.findById(trainerId);
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
+    // Check if the trainer is active
+    if (!trainer.active) {
+      return res.status(400).json({ message: "Trainer is not active" });
+    }
+
+    // Update the Workshop document to include the trainerId in its trainers array
+    const updatedWorkshop = await Workshop.findByIdAndUpdate(
+      workshopId,
+      { $addToSet: { trainers: trainerId } }, // Use $addToSet to avoid duplicates
+      { new: true }
+    );
+
+    if (!updatedWorkshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    // Update the Trainer document to include the workshopId in its workshops array
+    const updatedTrainer = await Trainer.findByIdAndUpdate(
+      trainerId,
+      { $addToSet: { workshops: workshopId } }, // Use $addToSet to avoid duplicates
+      { new: true }
+    );
+
+    // Optionally, send back the updated documents or a success message
+    return res.status(200).json({
+      message: "Successfully added trainer to workshop and vice versa",
+      updatedWorkshop,
+      updatedTrainer,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to add trainer", error });
+  }
+}
+
 async function approveRequest(req, res) {
   try {
     const { id } = req.params;
@@ -185,6 +230,7 @@ export default {
   getOneWorkshop: getOneWorkshop,
   deleteWorkshop: deleteWorkshop,
   searchWorkshops: searchWorkshops,
+  addTrainer: addTrainer,
   approveRequest: approveRequest,
   rejectRequest: rejectRequest,
 };

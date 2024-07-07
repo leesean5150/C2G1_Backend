@@ -8,10 +8,6 @@ const workshopSchema = new Schema(
       required: true,
       unique: true,
     },
-    trainer: {
-      type: String,
-      required: false,
-    },
     startDate: {
       type: Date,
       required: true,
@@ -36,6 +32,7 @@ const workshopSchema = new Schema(
       type: String,
       default: "",
     },
+    trainers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Trainer" }],
   },
   {
     timestamps: true,
