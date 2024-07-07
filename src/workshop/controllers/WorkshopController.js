@@ -122,17 +122,24 @@ async function searchWorkshops(req, res) {
 
 /**
  * addTrainer()
- * Input: _id of trainer object
+ * Input: _id of trainer and workshop object
  * Output: None
  * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
  */
 async function addTrainer(req, res) {
   try {
     const { trainerId, workshopId } = req.body;
-    // console log trainerId and include string to show the value
-    console.log(`trainerId: ${trainerId}`);
-    // console log workshop id
-    console.log(`workshopId: ${workshopId}`);
+
+    // Fetch the Trainer document to check if the trainer is active
+    const trainer = await Trainer.findById(trainerId);
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
+    // Check if the trainer is active
+    if (!trainer.active) {
+      return res.status(400).json({ message: "Trainer is not active" });
+    }
 
     // Update the Workshop document to include the trainerId in its trainers array
     const updatedWorkshop = await Workshop.findByIdAndUpdate(
@@ -151,10 +158,6 @@ async function addTrainer(req, res) {
       { $addToSet: { workshops: workshopId } }, // Use $addToSet to avoid duplicates
       { new: true }
     );
-
-    if (!updatedTrainer) {
-      return res.status(404).json({ message: "Trainer not found" });
-    }
 
     // Optionally, send back the updated documents or a success message
     return res.status(200).json({
