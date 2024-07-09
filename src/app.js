@@ -60,6 +60,6 @@ const initializeApp = async () => {
   await connectToDB();
 
   return app;
-}
+};
 
 export default initializeApp;

@@ -13,6 +13,7 @@ describe("GET /products", () => {
     const res = await supertest(app).get("/products");
     expect(res.status).toBe(200);
   });
+
   afterAll(async () => {
     await mongoose.connection.close();
   });
