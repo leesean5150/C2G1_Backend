@@ -10,8 +10,8 @@ describe("Testing Admin Functionality", () => {
   });
   test("testing login with superuser account", async () => {
     const response = await supertest(app).post("/auth/login/admin").send({
-      username: "admin",
-      password: "admin",
+        username: process.env.SUPERUSER_USERNAME,
+        password: process.env.SUPERUSER_PASSWORD,
     });
     expect(response.headers["set-cookie"]).toBeDefined();
     expect(response.headers['content-type']).toEqual(expect.stringContaining('json'));
