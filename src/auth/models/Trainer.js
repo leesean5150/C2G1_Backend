@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const timeslotSchema = new Schema({
+const timeslotSchema = new mongoose.Schema({
   start: Date,
   end: Date,
 });
@@ -20,5 +20,7 @@ const trainerSchema = new mongoose.Schema({
 });
 
 const TrainerModel = mongoose.model("Trainer", trainerSchema);
+const TimeslotModel = mongoose.model("Timeslot", timeslotSchema);
 
 export { TrainerModel as Trainer };
+export { TimeslotModel as Timeslot };
