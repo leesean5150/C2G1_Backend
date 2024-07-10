@@ -10,7 +10,6 @@ import productRoutes from "./test/routes/products.js";
 import { UserRouter } from "./auth/routes/user.js";
 import { Admin } from "./auth/models/Admin.js";
 import { WorkshopRouter } from "./workshop/routes/workshopRoutes.js";
-import { Workshop } from "./workshop/models/Workshop.js";
 
 const connectToDB = async () => {
   try {
@@ -41,22 +40,26 @@ const connectToDB = async () => {
   }
 };
 
-dotenv.config();
-const app = express();
+const initializeApp = async () => {
+  dotenv.config();
+  const app = express();
 
-app.use(express.json());
-app.use(
-  cors({
-    origin: [process.env.FRONT_END_URL],
-    credentials: true,
-  })
-);
-app.use(cookieParser());
+  app.use(express.json());
+  app.use(
+    cors({
+      origin: [process.env.FRONT_END_URL],
+      credentials: true,
+    })
+  );
+  app.use(cookieParser());
 
-app.use("/products", productRoutes);
-app.use("/auth", UserRouter);
-app.use("/workshop", WorkshopRouter);
+  app.use("/products", productRoutes);
+  app.use("/auth", UserRouter);
+  app.use("/workshop", WorkshopRouter);
 
-await connectToDB();
+  await connectToDB();
 
-export default app;
+  return app;
+};
+
+export default initializeApp;
