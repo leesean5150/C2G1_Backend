@@ -13,33 +13,39 @@ const updateUnavailableTimeslotsMiddleware = async (req, res, next) => {
       return res.status(404).json({ message: "Trainer not found" });
     }
 
+    console.log(trainerId);
+
     // Fetch all workshops the trainer is assigned to
-    const workshops = await Workshop.find({ trainerId: trainerId });
+    const workshops = await Workshop.find({ trainers: trainerId });
+    console.log(workshops);
 
     // Create new array to store unavailable timeslots
     const newUnavailableTimeslots = [];
 
     // Loop through all workshops the trainer is assigned to
     workshops.forEach((workshop) => {
-      // Assuming workshop model has startDate, endDate, startTime, and endTime
       // Construct the timeslot object
-      const newTimeslot = new Timeslot({
+      const newTimeslot = {
         start: workshop.startDate,
         end: workshop.endDate,
-      });
+      };
       // Push the timeslot to the array
       newUnavailableTimeslots.push(newTimeslot);
+      console.log(newTimeslot);
     });
 
+    console.log(newUnavailableTimeslots);
+
     // Update the trainer's unavailableTimeslots
-    trainer.unavailableTimeslots = newUnavailableTimeslots;
+    trainer.unavailableTimeslots = newUnavailableTimeslots.map((timeslot) => ({
+      start: timeslot.start,
+      end: timeslot.end,
+    }));
 
     await trainer.save();
 
-    // Optionally, attach updated trainer to the request object if needed downstream
-    req.updatedTrainer = trainer;
-
-    next(); // Proceed to next middleware or route handler
+    // Send response to client
+    return res.status(200).json({ message: "Timeslots updated successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to update timeslots" });
