@@ -1,6 +1,5 @@
-import { Trainer } from "./Trainer.js";
+import { Trainer, Timeslot } from "./../models/Trainer.js";
 import { Workshop } from "./../../workshop/models/Workshop.js";
-import { Timeslot } from "./Trainer.js";
 
 /**
  * Updates a trainer's unavailable timeslots.
