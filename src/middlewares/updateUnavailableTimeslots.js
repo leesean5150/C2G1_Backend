@@ -1,4 +1,4 @@
-import { Trainer, Timeslot } from "../auth/models/Trainer.js";
+import { Trainer } from "../auth/models/Trainer.js";
 import { Workshop } from "../workshop/models/Workshop.js";
 
 /**
