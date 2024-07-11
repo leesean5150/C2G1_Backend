@@ -21,6 +21,34 @@ async function getAllTrainers(req, res) {
   }
 }
 /**
+ * getAllAvailableTrainers()
+ * Input: start time, end time from req.body
+ * Output: JSON list of available trainers
+ * Description: return all available trainers (as JSON) who do not have a clash in their unavailableTimeslots with the given start and end times.
+ */
+async function getAllAvailableTrainers(req, res) {
+  const { startTime, endTime } = req.body;
+  try {
+    const trainers = await Trainer.find({
+      active: true,
+      unavailableTimeslots: {
+        $not: {
+          $elemMatch: {
+            start: { $lt: new Date(endTime) },
+            end: { $gt: new Date(startTime) },
+          },
+        },
+      },
+    }).exec();
+    return res.json({ status: true, trainers });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      message: e.message,
+    });
+  }
+}
+/**
  * adminCreateTrainer
  * Input: json object for trainer by body (JSON body)
  * Output: None
@@ -167,4 +195,5 @@ export default {
   adminUpdateTrainer,
   adminDeactivateTrainer,
   adminCreateTrainer,
+  getAllAvailableTrainers,
 };
