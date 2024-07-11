@@ -34,7 +34,6 @@ async function adminCreateTrainer(req, res) {
             password,
             fullname,
             country,
-            trainer_ID,
             trainer_role,
             experience,
             gender
@@ -48,7 +47,6 @@ async function adminCreateTrainer(req, res) {
             password: hashpassword,
             fullname: fullname,
             country: country,
-            trainer_ID: trainer_ID,
             trainer_role: trainer_role,
             experience: experience,
             gender: gender
@@ -131,7 +129,6 @@ async function adminUpdateTrainer(req, res) {
             email,
             fullname,
             country,
-            trainer_ID,
             trainer_role,
             experience,
             gender,
@@ -158,10 +155,6 @@ async function adminUpdateTrainer(req, res) {
 
         if (country !== undefined) {
             trainer.country = country;
-        }
-
-        if (trainer_ID !== undefined) {
-            trainer.trainer_ID = trainer_ID;
         }
 
         if (trainer_role !== undefined) {
