@@ -126,6 +126,7 @@ async function searchWorkshops(req, res) {
  * Output: None
  * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
  */
+
 async function addTrainer(req, res) {
     try {
         const { trainerId, workshopId } = req.body;

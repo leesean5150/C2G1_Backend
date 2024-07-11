@@ -12,6 +12,7 @@ import { Admin } from "./auth/models/Admin.js";
 import { WorkshopRouter } from "./workshop/routes/workshopRoutes.js";
 import { WorkshopSummaryRouter } from "./workshop/routes/workshopSummaryRoutes.js";
 
+
 const connectToDB = async() => {
     try {
         await mongoose.connect(config.db_uri, {});
@@ -41,23 +42,28 @@ const connectToDB = async() => {
     }
 };
 
-dotenv.config();
-const app = express();
+const initializeApp = async () => {
+  dotenv.config();
+  const app = express();
 
-app.use(express.json());
-app.use(
-    cors({
-        origin: [process.env.FRONT_END_URL],
-        credentials: true,
-    })
-);
-app.use(cookieParser());
 
-app.use("/products", productRoutes);
-app.use("/auth", UserRouter);
-app.use("/workshop", WorkshopRouter);
-app.use("/workshopSummary", WorkshopSummaryRouter);
+  app.use(express.json());
+  app.use(
+      cors({
+          origin: [process.env.FRONT_END_URL],
+          credentials: true,
+      })
+  );
+  app.use(cookieParser());
 
-await connectToDB();
+  app.use("/products", productRoutes);
+  app.use("/auth", UserRouter);
+  app.use("/workshop", WorkshopRouter);
+  app.use("/workshopSummary", WorkshopSummaryRouter);
 
-export default app;
+
+  await connectToDB();
+  return app;
+};
+
+export default initializeApp;
