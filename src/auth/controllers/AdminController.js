@@ -33,10 +33,7 @@ async function adminCreateTrainer(req, res) {
             email,
             password,
             fullname,
-            country,
-            trainer_role,
-            experience,
-            gender
+            trainer_role
         } = req.body;
 
         const hashpassword = await bcrypt.hash(password, 10);
@@ -46,10 +43,7 @@ async function adminCreateTrainer(req, res) {
             email: email,
             password: hashpassword,
             fullname: fullname,
-            country: country,
-            trainer_role: trainer_role,
-            experience: experience,
-            gender: gender
+            trainer_role: trainer_role
         });
         await trainer.save();
 
@@ -63,7 +57,7 @@ async function adminCreateTrainer(req, res) {
  * adminActivateTrainer()
  * Input: id_ by params (/get/:id)
  * Output: None
- * Description: with provided id parameter, find a certain trainer and update active status to true.
+ * Description: with provided id parameter, find a certain trainer and update availability status to true.
  */
 async function adminActivateTrainer(req, res) {
     try {
@@ -72,10 +66,10 @@ async function adminActivateTrainer(req, res) {
         if (!trainer) {
             return res.status(404).json({ message: "Trainer not found" });
         }
-        if (trainer.active === true) {
-            return res.status(200).json({ message: "Trainer is already active" });
+        if (trainer.availability === true) {
+            return res.status(200).json({ message: "Trainer is already availability" });
         }
-        trainer.active = true;
+        trainer.availability = true;
         await trainer.save();
         return res.json({
             status: true,
@@ -90,7 +84,7 @@ async function adminActivateTrainer(req, res) {
  * adminDeactivateTrainer()
  * Input: id_ by params (/get/:id)
  * Output: None
- * Description: with provided id parameter, find a certain trainer and update active status to false.
+ * Description: with provided id parameter, find a certain trainer and update availability status to false.
  */
 async function adminDeactivateTrainer(req, res) {
     try {
@@ -99,12 +93,12 @@ async function adminDeactivateTrainer(req, res) {
         if (!trainer) {
             return res.status(404).json({ message: "Trainer not found" });
         }
-        if (trainer.active === false) {
+        if (trainer.availability === false) {
             return res
                 .status(200)
                 .json({ message: "Trainer is already deactivated" });
         }
-        trainer.active = false;
+        trainer.availability = false;
         await trainer.save();
         return res.json({
             status: true,
