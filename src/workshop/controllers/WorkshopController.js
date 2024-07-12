@@ -123,23 +123,48 @@ async function searchWorkshops(req, res) {
 
 /**
  * addTrainers()
- * Input: Array of _id of trainers and workshop object
- * Output: None
- * Description: Updates both the trainers and workshop documents to establish a two-way link between them.
+ * Input: Request body containing an array of trainer IDs and a workshop ID
+ * Output: Response object with status and message
+ * Description: This function checks the availability of trainers based on their unavailableTimeslots against the workshop's start and end time. Only trainers who are active and available during the workshop's time are added to the workshop. It updates both the trainers and workshop documents to establish a two-way link between them, ensuring that only available and active trainers are linked to the workshop.
  */
 async function addTrainers(req, res, next) {
   try {
     const { trainerIds, workshopId } = req.body;
 
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+    const { startDate, endDate } = workshop;
+    console.log(startDate, endDate);
+
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
       const trainer = await Trainer.findById(trainerId);
       if (!trainer || !trainer.active) continue;
-      activeTrainers.push(trainerId);
+
+      const isTrainerUnavailable = trainer.unavailableTimeslots.some(
+        (timeslot) => {
+          const timeslotStart = new Date(timeslot.start);
+          const timeslotEnd = new Date(timeslot.end);
+          const workshopStart = new Date(startDate);
+          const workshopEnd = new Date(endDate);
+          console.log(
+            workshopStart <= timeslotEnd && workshopEnd >= timeslotStart
+          );
+          return workshopStart <= timeslotEnd && workshopEnd >= timeslotStart;
+        }
+      );
+
+      if (!isTrainerUnavailable) {
+        activeTrainers.push(trainerId);
+      }
     }
 
     if (activeTrainers.length === 0) {
-      return res.status(400).json({ message: "No active trainers found" });
+      return res
+        .status(400)
+        .json({ message: "No active and available trainers found" });
     }
 
     const updatedWorkshop = await Workshop.findByIdAndUpdate(
