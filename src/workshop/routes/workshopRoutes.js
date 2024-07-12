@@ -1,7 +1,10 @@
 import express from "express";
 import WorkshopController from "../controllers/WorkshopController.js";
 import verifyAdmin from "../../middlewares/verifyAdmin.js";
-import { updateUnavailableTimeslotsMiddleware } from "../../middlewares/updateUnavailableTimeslots.js";
+import {
+  updateMultipleTrainersUnavailableTimeslots,
+  updateMultipleTrainersUnavailableTimeslotsTerminal,
+} from "../../middlewares/updateUnavailableTimeslots.js";
 
 const router = express.Router();
 
@@ -12,10 +15,16 @@ router.get("/search", WorkshopController.searchWorkshops);
 router.patch(
   "/add-trainer",
   verifyAdmin,
-  WorkshopController.addTrainer,
-  updateUnavailableTimeslotsMiddleware
+  WorkshopController.addTrainers,
+  updateMultipleTrainersUnavailableTimeslotsTerminal
+); // Should not be in use. Use /approve/:id instead.
+router.patch(
+  "/approve/:id",
+  verifyAdmin,
+  updateMultipleTrainersUnavailableTimeslots,
+  WorkshopController.addTrainers,
+  WorkshopController.approveRequest
 );
-router.patch("/approve/:id", verifyAdmin, WorkshopController.approveRequest);
 router.patch("/reject/:id", verifyAdmin, WorkshopController.rejectRequest);
 router.delete("/del/:id", verifyAdmin, WorkshopController.deleteWorkshop);
 
