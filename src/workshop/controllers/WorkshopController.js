@@ -121,27 +121,31 @@ async function searchWorkshops(req, res) {
 }
 
 /**
- * addTrainer()
- * Input: _id of trainer and workshop object
+ * addTrainers()
+ * Input: Array of _id of trainers and workshop object
  * Output: None
- * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
+ * Description: Updates both the trainers and workshop documents to establish a two-way link between them.
  */
-async function addTrainer(req, res, next) {
+async function addTrainers(req, res, next) {
   try {
-    const { trainerId, workshopId } = req.body;
+    const { trainerIds, workshopId } = req.body; // Changed to accept an array of trainerIds
 
-    const trainer = await Trainer.findById(trainerId);
-    if (!trainer) {
-      return res.status(404).json({ message: "Trainer not found" });
+    // Validate each trainer and collect active ones
+    const activeTrainers = [];
+    for (const trainerId of trainerIds) {
+      const trainer = await Trainer.findById(trainerId);
+      if (!trainer || !trainer.active) continue; // Skip non-existent or inactive trainers
+      activeTrainers.push(trainerId);
     }
 
-    if (!trainer.active) {
-      return res.status(400).json({ message: "Trainer is not active" });
+    if (activeTrainers.length === 0) {
+      return res.status(400).json({ message: "No active trainers found" });
     }
 
+    // Update the workshop with all active trainers
     const updatedWorkshop = await Workshop.findByIdAndUpdate(
       workshopId,
-      { $addToSet: { trainers: trainerId } },
+      { $addToSet: { trainers: { $each: activeTrainers } } }, // Use $each to add multiple trainers
       { new: true }
     );
 
@@ -149,16 +153,21 @@ async function addTrainer(req, res, next) {
       return res.status(404).json({ message: "Workshop not found" });
     }
 
-    const updatedTrainer = await Trainer.findByIdAndUpdate(
-      trainerId,
-      { $addToSet: { workshops: workshopId } },
-      { new: true }
+    // Update each active trainer with the workshop
+    await Promise.all(
+      activeTrainers.map((trainerId) =>
+        Trainer.findByIdAndUpdate(
+          trainerId,
+          { $addToSet: { workshops: workshopId } },
+          { new: true }
+        )
+      )
     );
 
     next();
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: "Failed to add trainer", error });
+    return res.status(500).json({ message: "Failed to add trainers", error });
   }
 }
 
@@ -221,7 +230,7 @@ export default {
   getOneWorkshop: getOneWorkshop,
   deleteWorkshop: deleteWorkshop,
   searchWorkshops: searchWorkshops,
-  addTrainer: addTrainer,
+  addTrainers: addTrainers,
   approveRequest: approveRequest,
   rejectRequest: rejectRequest,
 };

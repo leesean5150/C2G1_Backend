@@ -2,41 +2,39 @@ import { Trainer } from "../auth/models/Trainer.js";
 import { Workshop } from "../workshop/models/Workshop.js";
 
 /**
- * Middleware to update a trainer's unavailable timeslots.
+ * Middleware to update multiple trainers' unavailable timeslots.
  */
-const updateUnavailableTimeslotsMiddleware = async (req, res, next) => {
-  const trainerId = req.body.trainerId;
+const updateMultipleTrainersUnavailableTimeslots = async (req, res, next) => {
+  const trainerIds = req.body.trainerIds;
 
   try {
-    const trainer = await Trainer.findById(trainerId);
-    if (!trainer) {
-      return res.status(404).json({ message: "Trainer not found" });
-    }
+    for (const trainerId of trainerIds) {
+      const trainer = await Trainer.findById(trainerId);
+      if (!trainer) {
+        console.log(`Trainer with ID ${trainerId} not found`);
+        continue;
+      }
 
-    const workshops = await Workshop.find({ trainers: trainerId });
+      const workshops = await Workshop.find({ trainers: trainerId });
 
-    const newUnavailableTimeslots = [];
-
-    workshops.forEach((workshop) => {
-      const newTimeslot = {
+      const newUnavailableTimeslots = workshops.map((workshop) => ({
         start: workshop.startDate,
         end: workshop.endDate,
-      };
-      newUnavailableTimeslots.push(newTimeslot);
-    });
+      }));
 
-    trainer.unavailableTimeslots = newUnavailableTimeslots.map((timeslot) => ({
-      start: timeslot.start,
-      end: timeslot.end,
-    }));
+      trainer.unavailableTimeslots = newUnavailableTimeslots;
+      await trainer.save();
+    }
 
-    await trainer.save();
-
-    return res.status(200).json({ message: "Timeslots updated successfully" });
+    return res
+      .status(200)
+      .json({ message: "Timeslots updated successfully for all trainers" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to update timeslots" });
+    return res
+      .status(500)
+      .json({ message: "Failed to update timeslots for trainers" });
   }
 };
 
-export { updateUnavailableTimeslotsMiddleware };
+export { updateMultipleTrainersUnavailableTimeslots };
