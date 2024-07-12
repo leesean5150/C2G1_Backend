@@ -1,7 +1,10 @@
 import express from "express";
 import WorkshopController from "../controllers/WorkshopController.js";
 import verifyAdmin from "../../middlewares/verifyAdmin.js";
-import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
+import {
+  updateMultipleTrainersUnavailableTimeslots,
+  updateMultipleTrainersUnavailableTimeslotsTerminal,
+} from "../../middlewares/updateUnavailableTimeslots.js";
 
 const router = express.Router();
 
@@ -13,7 +16,7 @@ router.patch(
   "/add-trainer",
   verifyAdmin,
   WorkshopController.addTrainers,
-  updateMultipleTrainersUnavailableTimeslots
+  updateMultipleTrainersUnavailableTimeslotsTerminal
 );
 router.patch("/approve/:id", verifyAdmin, WorkshopController.approveRequest);
 router.patch("/reject/:id", verifyAdmin, WorkshopController.rejectRequest);
