@@ -1,5 +1,6 @@
 import { Workshop } from "../models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
+import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
 
 /**
  * createWorkshop()
@@ -128,13 +129,12 @@ async function searchWorkshops(req, res) {
  */
 async function addTrainers(req, res, next) {
   try {
-    const { trainerIds, workshopId } = req.body; // Changed to accept an array of trainerIds
+    const { trainerIds, workshopId } = req.body;
 
-    // Validate each trainer and collect active ones
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
       const trainer = await Trainer.findById(trainerId);
-      if (!trainer || !trainer.active) continue; // Skip non-existent or inactive trainers
+      if (!trainer || !trainer.active) continue;
       activeTrainers.push(trainerId);
     }
 
@@ -142,10 +142,9 @@ async function addTrainers(req, res, next) {
       return res.status(400).json({ message: "No active trainers found" });
     }
 
-    // Update the workshop with all active trainers
     const updatedWorkshop = await Workshop.findByIdAndUpdate(
       workshopId,
-      { $addToSet: { trainers: { $each: activeTrainers } } }, // Use $each to add multiple trainers
+      { $addToSet: { trainers: { $each: activeTrainers } } },
       { new: true }
     );
 
@@ -153,7 +152,6 @@ async function addTrainers(req, res, next) {
       return res.status(404).json({ message: "Workshop not found" });
     }
 
-    // Update each active trainer with the workshop
     await Promise.all(
       activeTrainers.map((trainerId) =>
         Trainer.findByIdAndUpdate(
@@ -164,7 +162,7 @@ async function addTrainers(req, res, next) {
       )
     );
 
-    next();
+    updateMultipleTrainersUnavailableTimeslots(req, res, next);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to add trainers", error });
