@@ -1,50 +1,48 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const workshopSchema = new Schema(
-  {
-    workshopId: {
-      type: String,
-      required: true,
-      unique: true,
+const workshopSchema = new Schema({
+    //Not yet fixed
+    workshop_ID: {
+        type: String,
+        required: true,
+        unique: true,
     },
-    startDate: {
-      type: Date,
-      required: true,
+    start_date: {
+        type: Date,
+        required: true,
     },
-    endDate: {
-      type: Date,
-      required: true,
+    end_date: {
+        type: Date,
+        required: true,
     },
     availability: {
-      type: Boolean,
-      required: true,
+        type: Boolean,
+        required: true,
     },
     description: {
-      type: String,
-      required: false,
+        type: String,
+        required: false,
     },
     status: {
-      type: String,
-      default: "submitted",
+        type: String,
+        default: "submitted",
     },
-    rejectReason: {
-      type: String,
-      default: "",
+    reject_reason: {
+        type: String,
+        default: "",
     },
     trainers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Trainer" }],
-  },
-  {
+}, {
     timestamps: true,
-  }
-);
+});
 
-workshopSchema.pre("save", function (next) {
-  if (this.isNew) {
-    this.status = "submitted";
-    this.rejectReason = "";
-  }
-  next();
+workshopSchema.pre("save", function(next) {
+    if (this.isNew) {
+        this.status = "submitted";
+        this.rejectReason = "";
+    }
+    next();
 });
 
 const WorkshopModel = mongoose.model("Workshop", workshopSchema);
