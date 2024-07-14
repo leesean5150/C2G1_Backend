@@ -126,7 +126,9 @@ async function workshop(req, res, next) {
                 "2021": "32",
                 "projection": "50"
             }
-        ]
+        ];
+        console.log(typeof data);
+        console.log("is data an array?", Array.isArray(data));
     });
   } catch (e) {
     console.log(e);

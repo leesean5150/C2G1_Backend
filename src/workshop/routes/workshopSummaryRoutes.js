@@ -8,7 +8,17 @@ router.post("/", WorkshopSummaryController.createWorkshopSummary);
 router.get("/", WorkshopSummaryController.getAllWorkshopSummary);
 router.get("/get/:id", WorkshopSummaryController.getOneWorkshopSummary);
 router.get("/search", WorkshopSummaryController.searchWorkshopSummary);
-router.patch("/add-workshop", verifyAdmin, WorkshopSummaryController.addWorkshop);
-router.delete("/del/:id", verifyAdmin, WorkshopSummaryController.deleteWorkshopSummary);
+router.patch(
+  "/add-workshop",
+  verifyAdmin,
+  WorkshopSummaryController.addWorkshop
+);
+router.delete(
+  "/del/:id",
+  verifyAdmin,
+  WorkshopSummaryController.deleteWorkshopSummary
+);
+
+router.get("/workshopGraph", WorkshopSummaryController.getGraphWorkshopSummary);
 
 export { router as WorkshopSummaryRouter };
