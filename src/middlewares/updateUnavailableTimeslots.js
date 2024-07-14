@@ -2,41 +2,63 @@ import { Trainer } from "../auth/models/Trainer.js";
 import { Workshop } from "../workshop/models/Workshop.js";
 
 /**
- * Middleware to update a trainer's unavailable timeslots.
+ * Middleware to mark the current middleware as final and proceed to update trainers' unavailable timeslots.
+ * This approach abstracts the logic for setting the final middleware flag, making the route definition cleaner.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
  */
-const updateUnavailableTimeslotsMiddleware = async (req, res, next) => {
-  const trainerId = req.body.trainerId;
+function updateMultipleTrainersUnavailableTimeslotsTerminal(req, res, next) {
+  req.isFinalMiddleware = true;
+  updateMultipleTrainersUnavailableTimeslots(req, res, next);
+}
+
+/**
+ * Middleware to update multiple trainers' unavailable timeslots.
+ */
+const updateMultipleTrainersUnavailableTimeslots = async (req, res, next) => {
+  const { trainerIds } = req.body;
 
   try {
-    const trainer = await Trainer.findById(trainerId);
-    if (!trainer) {
-      return res.status(404).json({ message: "Trainer not found" });
+    await Promise.all(trainerIds.map(updateTrainerUnavailableTimeslots));
+
+    if (!req.isFinalMiddleware) {
+      next();
+    } else {
+      res
+        .status(200)
+        .json({ message: "Timeslots updated successfully for all trainers" });
     }
-
-    const workshops = await Workshop.find({ trainers: trainerId });
-
-    const newUnavailableTimeslots = [];
-
-    workshops.forEach((workshop) => {
-      const newTimeslot = {
-        start: workshop.startDate,
-        end: workshop.endDate,
-      };
-      newUnavailableTimeslots.push(newTimeslot);
-    });
-
-    trainer.unavailableTimeslots = newUnavailableTimeslots.map((timeslot) => ({
-      start: timeslot.start,
-      end: timeslot.end,
-    }));
-
-    await trainer.save();
-
-    return res.status(200).json({ message: "Timeslots updated successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to update timeslots" });
+    res
+      .status(500)
+      .json({ message: "Failed to update timeslots for trainers" });
   }
 };
 
-export { updateUnavailableTimeslotsMiddleware };
+/**
+ * Updates unavailable timeslots for a single trainer.
+ * @param {string} trainerId - The ID of the trainer to update.
+ */
+const updateTrainerUnavailableTimeslots = async (trainerId) => {
+  const trainer = await Trainer.findById(trainerId);
+  if (!trainer) {
+    console.log(`Trainer with ID ${trainerId} not found`);
+    return;
+  }
+
+  const workshops = await Workshop.find({ trainers: trainerId });
+  const newUnavailableTimeslots = workshops.map((workshop) => ({
+    start: workshop.startDate,
+    end: workshop.endDate,
+  }));
+
+  trainer.unavailableTimeslots = newUnavailableTimeslots;
+  await trainer.save();
+};
+
+export {
+  updateMultipleTrainersUnavailableTimeslots,
+  updateMultipleTrainersUnavailableTimeslotsTerminal,
+};

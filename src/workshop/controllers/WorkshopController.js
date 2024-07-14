@@ -1,5 +1,6 @@
 import { Workshop } from "../models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
+import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
 
 /**
  * createWorkshop()
@@ -121,53 +122,77 @@ async function searchWorkshops(req, res) {
 }
 
 /**
- * addTrainer()
- * Input: _id of trainer and workshop object
- * Output: None
- * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
+ * addTrainers()
+ * Input: Request body containing an array of trainer IDs and a workshop ID
+ * Output: Response object with status and message
+ * Description: This function checks the availability of trainers based on their unavailableTimeslots against the workshop's start and end time. Only trainers who are active and available during the workshop's time are added to the workshop. It updates both the trainers and workshop documents to establish a two-way link between them, ensuring that only available and active trainers are linked to the workshop.
  */
 
-async function addTrainer(req, res) {
-    try {
-        const { trainerId, workshopId } = req.body;
+async function addTrainers(req, res, next) {
+  try {
+    const { trainerIds, workshopId } = req.body;
 
-        // Fetch the Trainer document to check if the trainer is active
-        const trainer = await Trainer.findById(trainerId);
-        if (!trainer) {
-            return res.status(404).json({ message: "Trainer not found" });
-        }
-
-        // Check if the trainer is active
-        if (!trainer.active) {
-            return res.status(400).json({ message: "Trainer is not active" });
-        }
-
-        // Update the Workshop document to include the trainerId in its trainers array
-        const updatedWorkshop = await Workshop.findByIdAndUpdate(
-            workshopId, { $addToSet: { trainers: trainerId } }, // Use $addToSet to avoid duplicates
-            { new: true }
-        );
-
-        if (!updatedWorkshop) {
-            return res.status(404).json({ message: "Workshop not found" });
-        }
-
-        // Update the Trainer document to include the workshopId in its workshops array
-        const updatedTrainer = await Trainer.findByIdAndUpdate(
-            trainerId, { $addToSet: { workshops: workshopId } }, // Use $addToSet to avoid duplicates
-            { new: true }
-        );
-
-        // Optionally, send back the updated documents or a success message
-        return res.status(200).json({
-            message: "Successfully added trainer to workshop and vice versa",
-            updatedWorkshop,
-            updatedTrainer,
-        });
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "Failed to add trainer", error });
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
     }
+    const { startDate, endDate } = workshop;
+    console.log(startDate, endDate);
+
+    const activeTrainers = [];
+    for (const trainerId of trainerIds) {
+      const trainer = await Trainer.findById(trainerId);
+      if (!trainer || !trainer.active) continue;
+
+      const isTrainerUnavailable = trainer.unavailableTimeslots.some(
+        (timeslot) => {
+          const timeslotStart = new Date(timeslot.start);
+          const timeslotEnd = new Date(timeslot.end);
+          const workshopStart = new Date(startDate);
+          const workshopEnd = new Date(endDate);
+          console.log(
+            workshopStart <= timeslotEnd && workshopEnd >= timeslotStart
+          );
+          return workshopStart <= timeslotEnd && workshopEnd >= timeslotStart;
+        }
+      );
+
+      if (!isTrainerUnavailable) {
+        activeTrainers.push(trainerId);
+      }
+    }
+
+    if (activeTrainers.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No active and available trainers found" });
+    }
+
+    const updatedWorkshop = await Workshop.findByIdAndUpdate(
+      workshopId,
+      { $addToSet: { trainers: { $each: activeTrainers } } },
+      { new: true }
+    );
+
+    if (!updatedWorkshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    await Promise.all(
+      activeTrainers.map((trainerId) =>
+        Trainer.findByIdAndUpdate(
+          trainerId,
+          { $addToSet: { workshops: workshopId } },
+          { new: true }
+        )
+      )
+    );
+
+    updateMultipleTrainersUnavailableTimeslots(req, res, next);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to add trainers", error });
+  }
 }
 
 async function approveRequest(req, res) {
@@ -224,12 +249,13 @@ async function rejectRequest(req, res) {
 }
 
 export default {
-    createWorkshop: createWorkshop,
-    getAllWorkshops: getAllWorkshops,
-    getOneWorkshop: getOneWorkshop,
-    deleteWorkshop: deleteWorkshop,
-    searchWorkshops: searchWorkshops,
-    addTrainer: addTrainer,
-    approveRequest: approveRequest,
-    rejectRequest: rejectRequest,
+  createWorkshop: createWorkshop,
+  getAllWorkshops: getAllWorkshops,
+  getOneWorkshop: getOneWorkshop,
+  deleteWorkshop: deleteWorkshop,
+  searchWorkshops: searchWorkshops,
+  addTrainers: addTrainers,
+  approveRequest: approveRequest,
+  rejectRequest: rejectRequest,
 };
+

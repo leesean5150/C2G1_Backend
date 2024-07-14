@@ -53,4 +53,10 @@ router.delete(
 
 router.post("/trainers", verifyAdmin, AdminController.adminCreateTrainer);
 
+router.get(
+  "/trainers/available",
+  verifyAdmin,
+  AdminController.getAllAvailableTrainers
+);
+
 export { router as UserRouter };
