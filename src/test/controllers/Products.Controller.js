@@ -3,8 +3,6 @@ import Product from "../models/Product.js";
 async function workshop(req, res, next) {
   try {
     const products = await Product.find();
-    const yeet = [{ month: "Jan" }];
-    console.log(typeof yeet);
     return res.status(200).json({
       status: 200,
       data: [
