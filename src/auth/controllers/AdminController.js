@@ -10,6 +10,27 @@ import { Trainer } from "../models/Trainer.js";
  * Description: return all trainer (as JSON) existing in db.
  */
 async function getAllTrainers(req, res) {
+<<<<<<< HEAD
+=======
+  try {
+    const trainers = await Trainer.find({ role: "trainer" }).exec();
+    return res.json({ status: true, trainers });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      message: e,
+    });
+  }
+}
+/**
+ * getAllAvailableTrainers()
+ * Input: start time, end time from req.body
+ * Output: JSON list of available trainers
+ * Description: return all available trainers (as JSON) who do not have a clash in their unavailableTimeslots with the given start and end times.
+ */
+async function getAllAvailableTrainers(req, res) {
+  const { startTime, endTime } = req.body;
+>>>>>>> parent of 53c7190 (Merge pull request #20 from leesean5150/Schema-Update)
   try {
     const trainers = await Trainer.find({ role: "trainer" }).exec();
     return res.json({ status: true, trainers });

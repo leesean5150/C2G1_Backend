@@ -44,4 +44,13 @@ router.patch(
 
 router.post("/trainers", verifyAdmin, AdminController.adminCreateTrainer);
 
+<<<<<<< HEAD
+=======
+router.get(
+  "/trainers/available",
+  verifyAdmin,
+  AdminController.getAllAvailableTrainers
+);
+
+>>>>>>> parent of 53c7190 (Merge pull request #20 from leesean5150/Schema-Update)
 export { router as UserRouter };
