@@ -15,6 +15,8 @@ describe("Testing Client Endpoints", () => {
       username: "client",
       password: "client",
       email: "client@gmail.com",
+      country: "Singapore",
+      fullname: "Client"
     });
     expect(response.headers["content-type"]).toEqual(
       expect.stringContaining("json")
