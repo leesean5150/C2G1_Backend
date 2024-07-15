@@ -1,5 +1,5 @@
 {
-  "name": "c2g1-backend",
+  "name": "docker-learn",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
