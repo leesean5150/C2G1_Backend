@@ -84,10 +84,7 @@ async function getGraphWorkshopSummary(req, res, next) {
         for (const workshop of workshopSummary) {
           const year = workshop.year;
 
-          console.log("im here");
-
           if (years.includes(year)) {
-            console.log("im here2");
             // since each workshopSummary object contains an array field called workshop, i want to count this and put into entry[year]
             entry[year] += workshop.workshops.length;
 
@@ -104,6 +101,10 @@ async function getGraphWorkshopSummary(req, res, next) {
         monthData.data.push(entry);
       })
     );
+
+    monthData.data.sort((a, b) => a.index - b.index);
+
+    monthData.data.forEach((entry) => delete entry.index);
 
     res.status(200).json(monthData);
   } catch (error) {
