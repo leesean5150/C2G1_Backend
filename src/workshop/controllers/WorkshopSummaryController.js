@@ -48,32 +48,63 @@ async function getAllWorkshopSummary(req, res, next) {
 async function getGraphWorkshopSummary(req, res, next) {
   try {
     const months = [
-      "jan",
-      "feb",
-      "mar",
-      "apr",
-      "may",
-      "jun",
-      "jul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
-    const monthData = {};
+    const years = [2021, 2022, 2023, 2024, 2025];
+    const monthData = { data: [] };
 
     await Promise.all(
       months.map(async (month) => {
-        console.log("Checking this month: ${month}");
-        const workshopSummary = await WorkshopSummary.find({ month });
-        if (workshopSummary.length > 0) {
-          monthData[month] = workshopSummary;
-          console.log(monthData);
+        const entry = {
+          month: month,
+          actual_attendance_2024_Per_month: 0,
+          expected_attendance_2024_Per_month: 0,
+          projection: 0,
+        };
+
+        years.forEach((year) => {
+          entry[year] = 0;
+        });
+
+        const workshopSummary = await WorkshopSummary.find({
+          month: month,
+        }).populate("workshops");
+
+        for (const workshop of workshopSummary) {
+          const year = workshop.year;
+
+          console.log("im here");
+
+          if (years.includes(year)) {
+            console.log("im here2");
+            // since each workshopSummary object contains an array field called workshop, i want to count this and put into entry[year]
+            entry[year] += workshop.workshops.length;
+
+            console.log(`workshop.workshops: ${workshop.workshops}`);
+          }
+          if (year === 2024) {
+            entry.actual_attendance_2024_Per_month +=
+              workshop.actual_attendance;
+            entry.expected_attendance_2024_Per_month +=
+              workshop.expected_attendance;
+          }
         }
+
+        monthData.data.push(entry);
       })
     );
-    console.log(typeof monthData);
+
     res.status(200).json(monthData);
   } catch (error) {
     console.log("error getting this month data: ${month}:", err);
