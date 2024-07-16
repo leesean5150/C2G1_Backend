@@ -45,76 +45,6 @@ async function getAllWorkshopSummary(req, res, next) {
   }
 }
 
-async function getGraphWorkshopSummary(req, res, next) {
-  try {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    const years = [2021, 2022, 2023, 2024, 2025];
-    const monthData = { data: [] };
-
-    await Promise.all(
-      months.map(async (month) => {
-        const entry = {
-          month: month,
-          actual_attendance_2024_Per_month: 0,
-          expected_attendance_2024_Per_month: 0,
-          projection: 0,
-        };
-
-        years.forEach((year) => {
-          entry[year] = 0;
-        });
-
-        const workshopSummary = await WorkshopSummary.find({
-          month: month,
-        }).populate("workshops");
-
-        for (const workshop of workshopSummary) {
-          const year = workshop.year;
-
-          if (years.includes(year)) {
-            // since each workshopSummary object contains an array field called workshop, i want to count this and put into entry[year]
-            entry[year] += workshop.workshops.length;
-
-            console.log(`workshop.workshops: ${workshop.workshops}`);
-          }
-          if (year === 2024) {
-            entry.actual_attendance_2024_Per_month +=
-              workshop.actual_attendance;
-            entry.expected_attendance_2024_Per_month +=
-              workshop.expected_attendance;
-          }
-        }
-
-        monthData.data.push(entry);
-      })
-    );
-
-    monthData.data.sort((a, b) => a.index - b.index);
-
-    monthData.data.forEach((entry) => delete entry.index);
-
-    res.status(200).json(monthData);
-  } catch (error) {
-    console.log("error getting this month data: ${month}:", err);
-    return res
-      .status(500)
-      .json({ message: "Failed to retrieve workshop summary data", error });
-  }
-}
-
 /**
  * getOneWorkshop()
  * Input: id_ by params (/get/:id)
@@ -239,5 +169,4 @@ export default {
   deleteWorkshopSummary: deleteWorkshopSummary,
   searchWorkshopSummary: searchWorkshopSummary,
   addWorkshop: addWorkshop,
-  getGraphWorkshopSummary: getGraphWorkshopSummary,
 };

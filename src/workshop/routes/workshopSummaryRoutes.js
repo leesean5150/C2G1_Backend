@@ -19,6 +19,4 @@ router.delete(
   WorkshopSummaryController.deleteWorkshopSummary
 );
 
-router.get("/workshopGraph", WorkshopSummaryController.getGraphWorkshopSummary);
-
 export { router as WorkshopSummaryRouter };
