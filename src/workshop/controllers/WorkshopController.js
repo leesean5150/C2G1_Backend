@@ -20,8 +20,10 @@ async function createWorkshop(req, res, next) {
       description,
       deal_potential,
       pax,
-      location,
+      venue,
+      country,
       client_ID,
+      workshop_type,
     } = req.body;
 
     const client = await Client.findById(client_ID);
@@ -38,7 +40,9 @@ async function createWorkshop(req, res, next) {
       description,
       deal_potential,
       pax,
-      location,
+      venue,
+      country,
+      workshop_type,
       client: client._id,
     });
 

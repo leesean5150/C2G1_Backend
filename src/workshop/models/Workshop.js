@@ -44,7 +44,15 @@ const workshopSchema = new Schema(
       type: Number,
       required: true,
     },
-    location: {
+    venue: {
+      type: String,
+      required: true,
+    },
+    country: {
+      type: String,
+      required: true,
+    },
+    workshop_type: {
       type: String,
       required: true,
     },
