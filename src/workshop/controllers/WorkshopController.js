@@ -159,7 +159,8 @@ async function searchWorkshops(req, res) {
 
 async function addTrainers(req, res, next) {
   try {
-    const { trainerIds, workshopId } = req.body;
+    const { trainerIds } = req.body;
+    const workshopId = req.params.id;
 
     const workshop = await Workshop.findById(workshopId);
     if (!workshop) {
