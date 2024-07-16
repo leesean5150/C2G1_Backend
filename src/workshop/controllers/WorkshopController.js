@@ -2,6 +2,7 @@ import { Workshop } from "../models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { Client } from "../../auth/models/Client.js";
 import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
+import mongoose from "mongoose";
 
 /**
  * createWorkshop()
@@ -48,7 +49,7 @@ async function createWorkshop(req, res, next) {
 
     const savedWorkshop = await newWorkshop.save();
 
-    client.workshop = savedWorkshop._id;
+    client.workshop.push(savedWorkshop._id);
     await client.save();
 
     return res.status(201).json(savedWorkshop);
@@ -164,18 +165,17 @@ async function searchWorkshops(req, res) {
 async function addTrainers(req, res, next) {
   try {
     const { trainerIds } = req.body;
-    const workshopId = req.params.id;
+    const { id } = req.params;
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(id);
     if (!workshop) {
       return res.status(404).json({ message: "Workshop not found" });
     }
     const { start_date, end_date } = workshop;
-    console.log(start_date, end_date);
 
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
-      const trainer = await Trainer.findById(trainerId);
+      const trainer = await Trainer.findById({ _id: trainerId });
       if (!trainer || !trainer.availability) continue;
 
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
@@ -203,7 +203,7 @@ async function addTrainers(req, res, next) {
     }
 
     const updatedWorkshop = await Workshop.findByIdAndUpdate(
-      workshopId,
+      id,
       { $addToSet: { trainers: { $each: activeTrainers } } },
       { new: true }
     );
@@ -216,7 +216,7 @@ async function addTrainers(req, res, next) {
       activeTrainers.map((trainerId) =>
         Trainer.findByIdAndUpdate(
           trainerId,
-          { $addToSet: { workshops: workshopId } },
+          { $addToSet: { workshops: id } },
           { new: true }
         )
       )

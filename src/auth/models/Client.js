@@ -8,11 +8,12 @@ const clientSchema = new mongoose.Schema({
   password: { type: String, required: true },
   country: { type: String, required: true },
   role: { type: String, default: "client" },
-  workshop: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Workshop",
-    unique: true,
-  },
+  workshop: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workshop",
+    },
+  ],
 });
 
 const ClientModel = mongoose.model("Client", clientSchema);

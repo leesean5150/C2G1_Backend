@@ -60,7 +60,6 @@ const workshopSchema = new Schema(
     client: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Client",
-      unique: true,
     },
   },
   {
