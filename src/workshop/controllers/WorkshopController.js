@@ -166,8 +166,8 @@ async function addTrainers(req, res, next) {
     if (!workshop) {
       return res.status(404).json({ message: "Workshop not found" });
     }
-    const { startDate, endDate } = workshop;
-    console.log(startDate, endDate);
+    const { start_Date, end_Date } = workshop;
+    console.log(start_Date, end_Date);
 
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
@@ -178,8 +178,8 @@ async function addTrainers(req, res, next) {
         (timeslot) => {
           const timeslotStart = new Date(timeslot.start);
           const timeslotEnd = new Date(timeslot.end);
-          const workshopStart = new Date(startDate);
-          const workshopEnd = new Date(endDate);
+          const workshopStart = new Date(start_Date);
+          const workshopEnd = new Date(end_Date);
           console.log(
             workshopStart <= timeslotEnd && workshopEnd >= timeslotStart
           );
