@@ -17,7 +17,7 @@ router.post("/forgot-password", UserController.forgotpassword);
 router.post("/reset-password/:token", UserController.resetpassword);
 
 router.get("/verify", verifyLoggedIn, async (req, res) => {
-  return res.json({ status: true, message: "Authorized", role: req.user.role });
+  return res.json({ status: true, message: "Authorized", role: req.user.role, id: req.user.id });
 });
 
 router.get("/logout", UserController.logout);
