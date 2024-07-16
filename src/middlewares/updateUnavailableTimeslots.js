@@ -50,8 +50,8 @@ const updateTrainerUnavailableTimeslots = async (trainerId) => {
 
   const workshops = await Workshop.find({ trainers: trainerId });
   const newUnavailableTimeslots = workshops.map((workshop) => ({
-    start: workshop.startDate,
-    end: workshop.endDate,
+    start: workshop.start_date,
+    end: workshop.end_date,
   }));
 
   trainer.unavailableTimeslots = newUnavailableTimeslots;
