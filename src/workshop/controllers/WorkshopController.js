@@ -163,26 +163,27 @@ async function searchWorkshops(req, res) {
 
 async function addTrainers(req, res, next) {
   try {
-    const { trainerIds, workshopId } = req.body;
+    const { trainerIds } = req.body;
+    const workshopId = req.params.id;
 
     const workshop = await Workshop.findById(workshopId);
     if (!workshop) {
       return res.status(404).json({ message: "Workshop not found" });
     }
-    const { startDate, endDate } = workshop;
-    console.log(startDate, endDate);
+    const { start_date, end_date } = workshop;
+    console.log(start_date, end_date);
 
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
       const trainer = await Trainer.findById(trainerId);
-      if (!trainer || !trainer.active) continue;
+      if (!trainer || !trainer.availability) continue;
 
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
         (timeslot) => {
           const timeslotStart = new Date(timeslot.start);
           const timeslotEnd = new Date(timeslot.end);
-          const workshopStart = new Date(startDate);
-          const workshopEnd = new Date(endDate);
+          const workshopStart = new Date(start_date);
+          const workshopEnd = new Date(end_date);
           console.log(
             workshopStart <= timeslotEnd && workshopEnd >= timeslotStart
           );
