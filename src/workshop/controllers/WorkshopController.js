@@ -1,5 +1,6 @@
 import { Workshop } from "../models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
+import { Client } from "../../auth/models/Client.js";
 import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
 
 /**
@@ -10,16 +11,42 @@ import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/up
  */
 async function createWorkshop(req, res, next) {
   try {
-    const { workshop_ID, start_date, end_date, availability, description } =
-      req.body;
-    const newWorkshop = new Workshop({
+    const {
       workshop_ID,
+      workshop_name,
       start_date,
       end_date,
       availability,
       description,
+      deal_potential,
+      pax,
+      location,
+      client_ID,
+    } = req.body;
+
+    const client = await Client.findById(client_ID);
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    const newWorkshop = new Workshop({
+      workshop_ID,
+      workshop_name,
+      start_date,
+      end_date,
+      availability,
+      description,
+      deal_potential,
+      pax,
+      location,
+      client: client._id,
     });
+
     const savedWorkshop = await newWorkshop.save();
+
+    client.workshop = savedWorkshop._id;
+    await client.save();
+
     return res.status(201).json(savedWorkshop);
   } catch (error) {
     console.log(error);
@@ -37,7 +64,9 @@ async function createWorkshop(req, res, next) {
  */
 async function getAllWorkshops(req, res, next) {
   try {
-    const workshops = await Workshop.find();
+    const workshops = await Workshop.find()
+      .populate("client")
+      .populate("trainers");
     return res.status(200).json(workshops);
   } catch (error) {
     console.log(error);
