@@ -1,4 +1,5 @@
 import { WorkshopSummary } from "../../workshop/models/WorkshopSummary.js";
+import { Workshop } from "../../workshop/models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { get } from "http";
 
@@ -85,6 +86,7 @@ async function getTrainerGraph(req, res, next) {
         experience: trainer.experience,
         trainer_role: trainer.trainer_role,
         availability: trainer.availability,
+        workshops_completed_this_month: trainer.workshops_completed_this_month,
         ongoing_workshops: trainer.ongoing_workshops,
         workshops_completed_total: trainer.workshops_completed_total,
       };
@@ -104,23 +106,41 @@ async function getTodayGraph(req, res, next) {
   try {
     const todayData = { data: [] };
     const today = new Date();
-    const todayString = today.toDateString();
 
     const workshops = await Workshop.find({
-      date: todayString,
+      start_date: { $lte: today },
+      end_date: { $gte: today },
+      status: "approved",
     });
 
-    const ongoingWorkshops = workshops.filter(
-      (workshop) => workshop.status === "ongoing"
-    );
+    console.log(`Workshops: ${workshops}`);
 
-    todayData.data.push({
-      ongoingworkshopstoday: ongoingWorkshops.length,
-      trainertoday: 0,
-      participantstoday: 0,
-      "participant-expected": 0,
-      attedance: "0%",
+    let trainertoday = 0;
+    let parttoday = 0;
+    let partexpected = 0;
+
+    workshops.forEach((workshop) => {
+      trainertoday += workshop.trainers.length;
+      parttoday += workshop.pax;
+      partexpected += workshop.pax;
     });
+    let attendance = 0;
+
+    if (partexpected - parttoday > 0) {
+      attendance = ((partexpected - parttoday) / partexpected) * 100;
+    } else {
+      attendance = 100;
+    }
+
+    const entry = {
+      ongoingworkshopstoday: workshops.length,
+      trainertoday: trainertoday,
+      participantstoday: parttoday,
+      "participant-expected": partexpected,
+      attendance: `${attendance.toFixed(2)}%`,
+    };
+
+    todayData.data.push(entry);
 
     res.status(200).json(todayData);
   } catch (error) {
@@ -134,4 +154,5 @@ async function getTodayGraph(req, res, next) {
 export default {
   getGraphWorkshopSummary: getGraphWorkshopSummary,
   getTrainerGraph: getTrainerGraph,
+  getTodayGraph: getTodayGraph,
 };
