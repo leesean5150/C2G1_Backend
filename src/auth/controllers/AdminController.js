@@ -10,15 +10,15 @@ import { Trainer } from "../models/Trainer.js";
  * Description: return all trainer (as JSON) existing in db.
  */
 async function getAllTrainers(req, res) {
-    try {
-        const trainers = await Trainer.find({ role: "trainer" }).exec();
-        return res.json({ status: true, trainers });
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({
-            message: e,
-        });
-    }
+  try {
+    const trainers = await Trainer.find({ role: "trainer" }).exec();
+    return res.json({ status: true, trainers });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      message: e,
+    });
+  }
 }
 /**
  * getAllAvailableTrainers()
@@ -30,7 +30,7 @@ async function getAllAvailableTrainers(req, res) {
   const { startTime, endTime } = req.body;
   try {
     const trainers = await Trainer.find({
-      active: true,
+      active: "Active",
       unavailableTimeslots: {
         $not: {
           $elemMatch: {
@@ -55,58 +55,52 @@ async function getAllAvailableTrainers(req, res) {
  * Description: with provided JSON, query db to create a new trainer.
  */
 async function adminCreateTrainer(req, res) {
-    try {
-        const {
-            username,
-            email,
-            password,
-            fullname,
-            trainer_role
-        } = req.body;
+  try {
+    const { username, email, password, fullname, trainer_role } = req.body;
 
-        const hashpassword = await bcrypt.hash(password, 10);
+    const hashpassword = await bcrypt.hash(password, 10);
 
-        const trainer = new Trainer({
-            username: username,
-            email: email,
-            password: hashpassword,
-            fullname: fullname,
-            trainer_role: trainer_role
-        });
-        await trainer.save();
+    const trainer = new Trainer({
+      username: username,
+      email: email,
+      password: hashpassword,
+      fullname: fullname,
+      trainer_role: trainer_role,
+    });
+    await trainer.save();
 
-        return res.json({ status: true, message: "Trainer added successfully" });
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({ message: e });
-    }
+    return res.json({ status: true, message: "Trainer added successfully" });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ message: e });
+  }
 }
 /**
  * adminActivateTrainer()
  * Input: id_ by params (/get/:id)
  * Output: None
- * Description: with provided id parameter, find a certain trainer and update availability status to true.
+ * Description: with provided id parameter, find a certain trainer and update availability status to Available.
  */
 async function adminActivateTrainer(req, res) {
-    try {
-        const { id } = req.params;
-        const trainer = await Trainer.findOne({ _id: id }).exec();
-        if (!trainer) {
-            return res.status(404).json({ message: "Trainer not found" });
-        }
-        if (trainer.availability === true) {
-            return res.status(200).json({ message: "Trainer is already availability" });
-        }
-        trainer.availability = true;
-        await trainer.save();
-        return res.json({
-            status: true,
-            message: "Trainer activated successfully",
-        });
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({ message: e });
+  try {
+    const { id } = req.params;
+    const trainer = await Trainer.findOne({ _id: id }).exec();
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
     }
+    if (trainer.availability === "Active") {
+      return res.status(200).json({ message: "Trainer is already active" });
+    }
+    trainer.availability = "Active";
+    await trainer.save();
+    return res.json({
+      status: true,
+      message: "Trainer activated successfully",
+    });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ message: e });
+  }
 }
 /**
  * adminDeactivateTrainer()
@@ -115,27 +109,27 @@ async function adminActivateTrainer(req, res) {
  * Description: with provided id parameter, find a certain trainer and update availability status to false.
  */
 async function adminDeactivateTrainer(req, res) {
-    try {
-        const { id } = req.params;
-        const trainer = await Trainer.findOne({ _id: id }).exec();
-        if (!trainer) {
-            return res.status(404).json({ message: "Trainer not found" });
-        }
-        if (trainer.availability === false) {
-            return res
-                .status(200)
-                .json({ message: "Trainer is already deactivated" });
-        }
-        trainer.availability = false;
-        await trainer.save();
-        return res.json({
-            status: true,
-            message: "Trainer successfully deactivated",
-        });
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({ message: e });
+  try {
+    const { id } = req.params;
+    const trainer = await Trainer.findOne({ _id: id }).exec();
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
     }
+    if (trainer.availability === "Inactive") {
+      return res
+        .status(200)
+        .json({ message: "Trainer is already deactivated" });
+    }
+    trainer.availability = "Inactive";
+    await trainer.save();
+    return res.json({
+      status: true,
+      message: "Trainer successfully deactivated",
+    });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ message: e });
+  }
 }
 /**
  * adminDeactivateTrainer()
@@ -144,80 +138,80 @@ async function adminDeactivateTrainer(req, res) {
  * Description: with provided id parameter, find a certain trainer and update the related fields.
  */
 async function adminUpdateTrainer(req, res) {
-    try {
-        const { id } = req.params;
-        const {
-            username,
-            email,
-            fullname,
-            country,
-            trainer_role,
-            experience,
-            gender,
-            workshops_completed_this_month,
-            ongoing_workshops,
-            workshops_completed_total,
-            availability
-        } = req.body;
-        const trainer = await Trainer.findOne({ _id: id }).exec();
-        if (!trainer) {
-            return res.status(404).json({ message: "Trainer not found" });
-        }
-        if (username !== undefined) {
-            trainer.username = username;
-        }
-
-        if (email !== undefined) {
-            trainer.email = email;
-        }
-
-        if (fullname !== undefined) {
-            trainer.fullname = fullname;
-        }
-
-        if (country !== undefined) {
-            trainer.country = country;
-        }
-
-        if (trainer_role !== undefined) {
-            trainer.trainer_role = trainer_role;
-        }
-
-        if (experience !== undefined) {
-            trainer.experience = experience;
-        }
-
-        if (gender !== undefined) {
-            trainer.gender = gender;
-        }
-
-        if (workshops_completed_this_month !== undefined) {
-            trainer.workshops_completed_this_month = workshops_completed_this_month;
-        }
-
-        if (ongoing_workshops !== undefined) {
-            trainer.ongoing_workshops = ongoing_workshops;
-        }
-
-        if (workshops_completed_total !== undefined) {
-            trainer.workshops_completed_total = workshops_completed_total;
-        }
-
-        if (availability !== undefined) {
-            trainer.availability = availability;
-        }
-
-        if (Object.keys(req.body).length === 0) {
-            return res.status(400).json({ message: "No fields to update" });
-        }
-        await trainer.save();
-        return res.json({ status: true, message: "Trainer updated successfully" });
-    } catch (e) {
-        console.log(e);
-        return res.status(500).json({
-            message: e,
-        });
+  try {
+    const { id } = req.params;
+    const {
+      username,
+      email,
+      fullname,
+      country,
+      trainer_role,
+      experience,
+      gender,
+      workshops_completed_this_month,
+      ongoing_workshops,
+      workshops_completed_total,
+      availability,
+    } = req.body;
+    const trainer = await Trainer.findOne({ _id: id }).exec();
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
     }
+    if (username !== undefined) {
+      trainer.username = username;
+    }
+
+    if (email !== undefined) {
+      trainer.email = email;
+    }
+
+    if (fullname !== undefined) {
+      trainer.fullname = fullname;
+    }
+
+    if (country !== undefined) {
+      trainer.country = country;
+    }
+
+    if (trainer_role !== undefined) {
+      trainer.trainer_role = trainer_role;
+    }
+
+    if (experience !== undefined) {
+      trainer.experience = experience;
+    }
+
+    if (gender !== undefined) {
+      trainer.gender = gender;
+    }
+
+    if (workshops_completed_this_month !== undefined) {
+      trainer.workshops_completed_this_month = workshops_completed_this_month;
+    }
+
+    if (ongoing_workshops !== undefined) {
+      trainer.ongoing_workshops = ongoing_workshops;
+    }
+
+    if (workshops_completed_total !== undefined) {
+      trainer.workshops_completed_total = workshops_completed_total;
+    }
+
+    if (availability !== undefined) {
+      trainer.availability = availability;
+    }
+
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+    await trainer.save();
+    return res.json({ status: true, message: "Trainer updated successfully" });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      message: e,
+    });
+  }
 }
 
 export default {

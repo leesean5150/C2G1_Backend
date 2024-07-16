@@ -9,24 +9,24 @@ import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/up
  * Description: with provided JSON, query db to create a new workshop request.
  */
 async function createWorkshop(req, res, next) {
-    try {
-        const { workshop_ID, start_date, end_date, availability, description } =
-        req.body;
-        const newWorkshop = new Workshop({
-            workshop_ID,
-            start_date,
-            end_date,
-            availability,
-            description,
-        });
-        const savedWorkshop = await newWorkshop.save();
-        return res.status(201).json(savedWorkshop);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to create workshop", error });
-    }
+  try {
+    const { workshop_ID, start_date, end_date, availability, description } =
+      req.body;
+    const newWorkshop = new Workshop({
+      workshop_ID,
+      start_date,
+      end_date,
+      availability,
+      description,
+    });
+    const savedWorkshop = await newWorkshop.save();
+    return res.status(201).json(savedWorkshop);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to create workshop", error });
+  }
 }
 
 /**
@@ -36,15 +36,15 @@ async function createWorkshop(req, res, next) {
  * Description: return all workshop requests (as JSON) existing in db.
  */
 async function getAllWorkshops(req, res, next) {
-    try {
-        const workshops = await Workshop.find();
-        return res.status(200).json(workshops);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to retrieve workshops", error });
-    }
+  try {
+    const workshops = await Workshop.find();
+    return res.status(200).json(workshops);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshops", error });
+  }
 }
 
 /**
@@ -55,20 +55,20 @@ async function getAllWorkshops(req, res, next) {
  */
 
 async function getOneWorkshop(req, res) {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const workshop = await Workshop.findOne({ _id: id });
-        if (!workshop) {
-            return res.status(404).json({ message: "Workshop not found" });
-        }
-        return res.status(200).json(workshop);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to retrieve workshop", error });
+    const workshop = await Workshop.findOne({ _id: id });
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
     }
+    return res.status(200).json(workshop);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop", error });
+  }
 }
 
 /**
@@ -78,20 +78,20 @@ async function getOneWorkshop(req, res) {
  * Description: with provided id parameter, find a certain workshop from the database and delete it.
  */
 async function deleteWorkshop(req, res) {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const workshop = await Workshop.findOneAndDelete({ _id: id });
-        if (!workshop) {
-            return res.status(404).json({ message: "Workshop not found" });
-        }
-        return res.status(204).send();
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to delete workshop", error });
+    const workshop = await Workshop.findOneAndDelete({ _id: id });
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
     }
+    return res.status(204).send();
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to delete workshop", error });
+  }
 }
 
 /**
@@ -101,24 +101,24 @@ async function deleteWorkshop(req, res) {
  * Description: with provided info, find workshops that matches to the filter from the database and return them.
  */
 async function searchWorkshops(req, res) {
-    try {
-        const { attributeName, attributeContent } = req.body;
-        const filter = {};
-        filter[attributeName] = attributeContent;
+  try {
+    const { attributeName, attributeContent } = req.body;
+    const filter = {};
+    filter[attributeName] = attributeContent;
 
-        const workshops = await Workshop.find(filter);
-        if (workshops.length === 0) {
-            return res
-                .status(404)
-                .json({ message: "No workshop found with the given attribute" });
-        }
-        return res.status(200).json(workshops);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to search workshops", error });
+    const workshops = await Workshop.find(filter);
+    if (workshops.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No workshop found with the given attribute" });
     }
+    return res.status(200).json(workshops);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to search workshops", error });
+  }
 }
 
 /**
@@ -196,56 +196,56 @@ async function addTrainers(req, res, next) {
 }
 
 async function approveRequest(req, res) {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const workshop = await Workshop.findOne({ _id: id });
-        if (!workshop) {
-            return res.status(404).json({ message: "Workshop not found" });
-        }
-        if (workshop.status === "approved") {
-            return res.status(200).json({ message: "Workshop is already approved" });
-        }
-
-        workshop.status = "approved";
-        workshop.rejectReason = "N/A";
-
-        await workshop.save();
-
-        return res.status(200).json(workshop);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to retrieve workshop", error });
+    const workshop = await Workshop.findOne({ _id: id });
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
     }
+    if (workshop.status === "approved") {
+      return res.status(200).json({ message: "Workshop is already approved" });
+    }
+
+    workshop.status = "approved";
+    workshop.rejectReason = "N/A";
+
+    await workshop.save();
+
+    return res.status(200).json(workshop);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop", error });
+  }
 }
 
 async function rejectRequest(req, res) {
-    try {
-        const { rejectReason } = req.body;
-        const { id } = req.params;
+  try {
+    const { rejectReason } = req.body;
+    const { id } = req.params;
 
-        const workshop = await Workshop.findOne({ _id: id });
-        if (!workshop) {
-            return res.status(404).json({ message: "Workshop not found" });
-        }
-        if (workshop.status === "rejected") {
-            return res.status(200).json({ message: "Workshop is already rejected" });
-        }
-
-        workshop.status = "rejected";
-        workshop.rejectReason = rejectReason;
-
-        await workshop.save();
-
-        return res.status(200).json(workshop);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to retrieve workshop", error });
+    const workshop = await Workshop.findOne({ _id: id });
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
     }
+    if (workshop.status === "rejected") {
+      return res.status(200).json({ message: "Workshop is already rejected" });
+    }
+
+    workshop.status = "rejected";
+    workshop.rejectReason = rejectReason;
+
+    await workshop.save();
+
+    return res.status(200).json(workshop);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop", error });
+  }
 }
 
 export default {
@@ -258,4 +258,3 @@ export default {
   approveRequest: approveRequest,
   rejectRequest: rejectRequest,
 };
-
