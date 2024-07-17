@@ -14,7 +14,3 @@ function validateStartEndDates(startDate, endDate) {
   }
   return true;
 }
-
-console.log(validateDates("2021-01-01", "2021-01-02")); // true
-console.log(validateDates("2021-01-02", "2021-01-01")); // false
-console.log(validateDates("2021-01-01", "2021-01-01")); // false
