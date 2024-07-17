@@ -30,7 +30,7 @@ async function getAllAvailableTrainers(req, res) {
   const { startTime, endTime } = req.body;
   try {
     const trainers = await Trainer.find({
-      active: "Active",
+      availability: "Active",
       unavailableTimeslots: {
         $not: {
           $elemMatch: {

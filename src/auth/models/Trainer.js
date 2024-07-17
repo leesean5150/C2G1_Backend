@@ -9,7 +9,7 @@ const trainerSchema = new mongoose.Schema({
   password: { type: String, required: true },
   country: { type: String, required: false },
   role: { type: String, default: "trainer" },
-  availability: { type: String, default: "" },
+  availability: { type: String, default: "Active" },
   trainer_role: { type: String, required: true },
   workshops_completed_this_month: { type: Number, default: 0, required: false },
   experience: { type: Number, required: false },

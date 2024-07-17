@@ -176,8 +176,7 @@ async function addTrainers(req, res, next) {
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
       const trainer = await Trainer.findById({ _id: trainerId });
-      if (!trainer || !trainer.availability) continue;
-
+      // if (!trainer || !trainer.availability) continue;
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
         (timeslot) => {
           const timeslotStart = new Date(timeslot.start);
