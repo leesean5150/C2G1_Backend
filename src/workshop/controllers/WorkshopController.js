@@ -2,6 +2,7 @@ import { Workshop } from "../models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { Client } from "../../auth/models/Client.js";
 import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
+import { validateStartEndDates } from "../../utils/dateUtils.js";
 import mongoose from "mongoose";
 
 /**
@@ -30,6 +31,12 @@ async function createWorkshop(req, res, next) {
     const client = await Client.findById(client_ID);
     if (!client) {
       return res.status(404).json({ message: "Client not found" });
+    }
+
+    if (!validateStartEndDates(start_date, end_date)) {
+      return res
+        .status(400)
+        .json({ message: "End date must be before Start date." });
     }
 
     const newWorkshop = new Workshop({
