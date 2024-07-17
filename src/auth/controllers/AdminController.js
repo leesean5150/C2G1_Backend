@@ -34,8 +34,8 @@ async function getAllAvailableTrainers(req, res) {
       unavailableTimeslots: {
         $not: {
           $elemMatch: {
-            start: { $lt: new Date(endTime) },
-            end: { $gt: new Date(startTime) },
+            start: { $lte: new Date(endTime) },
+            end: { $gte: new Date(startTime) },
           },
         },
       },
