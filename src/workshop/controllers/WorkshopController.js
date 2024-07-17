@@ -16,6 +16,11 @@ async function createWorkshop(req, res, next) {
     const {
       workshop_ID,
       workshop_name,
+      company_role,
+      name,
+      email,
+      phone_number,
+      company,
       start_date,
       end_date,
       availability,
@@ -42,6 +47,11 @@ async function createWorkshop(req, res, next) {
     const newWorkshop = new Workshop({
       workshop_ID,
       workshop_name,
+      company_role,
+      name,
+      email,
+      phone_number,
+      company,
       start_date,
       end_date,
       availability,
@@ -275,7 +285,7 @@ async function rejectRequest(req, res) {
     }
 
     workshop.status = "rejected";
-    workshop.rejectReason = rejectReason;
+    workshop.reject_reason = rejectReason;
 
     await workshop.save();
 
@@ -288,6 +298,18 @@ async function rejectRequest(req, res) {
   }
 }
 
+async function getAllSubmittedWorkshops(req, res, next) {
+  try {
+    const workshops = await Workshop.find({ status: "submitted" });
+    return res.status(200).json(workshops);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshops", error });
+  }
+}
+
 export default {
   createWorkshop: createWorkshop,
   getAllWorkshops: getAllWorkshops,
@@ -297,4 +319,5 @@ export default {
   addTrainers: addTrainers,
   approveRequest: approveRequest,
   rejectRequest: rejectRequest,
+  getAllSubmittedWorkshops: getAllSubmittedWorkshops,
 };
