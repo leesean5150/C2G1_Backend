@@ -1,17 +1,21 @@
 db = db.getSiblingDB("docker");
 
-// Example of creating a new client
-// db.clients.insertMany([
-//   {
-//     username: "client12345",
-//     email: "client123@client.com",
-//     fullname: "Client",
-//     password: "$2a$10$RL7CzLXMEaIqbkV9SwkRQeK5zLMKyggBboxayQnHbSBuCHksGoOjS",
-//     country: "Singapore",
-//     role: "client",
-//     workshop: [],
-//   },
-// ]);
+db.trainers.insertMany([
+  {
+    username: "trainer1",
+    email: "trainer1@email.com",
+    password: "trainer1",
+    fullname: "Trainer One",
+    trainer_role: "Trainer Lead",
+  },
+  {
+    username: "trainer2",
+    email: "trainer2@email.com",
+    password: "trainer2",
+    fullname: "Trainer Two",
+    trainer_role: "Trainer Assistant",
+  },
+]);
 
 // db.workshops.insertMany([
 //   {
