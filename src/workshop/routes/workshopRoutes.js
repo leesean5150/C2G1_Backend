@@ -12,6 +12,11 @@ router.post("/", WorkshopController.createWorkshop);
 router.get("/", WorkshopController.getAllWorkshops);
 router.get("/get/:id", WorkshopController.getOneWorkshop);
 router.get("/search", WorkshopController.searchWorkshops);
+router.get(
+  "/getRequest",
+  verifyAdmin,
+  WorkshopController.getAllSubmittedWorkshops
+);
 router.patch(
   "/add-trainer",
   verifyAdmin,

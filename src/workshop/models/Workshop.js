@@ -12,6 +12,21 @@ const workshopSchema = new Schema(
       type: String,
       required: true,
     },
+    company_role: {
+      type: String,
+    },
+    name: {
+      type: String,
+    },
+    email: {
+      type: String,
+    },
+    phone_number: {
+      type: Number,
+    },
+    company: {
+      type: String,
+    },
     start_date: {
       type: Date,
       required: true,

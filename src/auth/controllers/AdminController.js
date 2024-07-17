@@ -12,7 +12,7 @@ import { Trainer } from "../models/Trainer.js";
 async function getAllTrainers(req, res) {
   try {
     const trainers = await Trainer.find({ role: "trainer" }).exec();
-    return res.json({ status: true, trainers });
+    return res.status(200).json(trainers);
   } catch (e) {
     console.log(e);
     return res.status(500).json({
@@ -27,7 +27,7 @@ async function getAllTrainers(req, res) {
  * Description: return all available trainers (as JSON) who do not have a clash in their unavailableTimeslots with the given start and end times.
  */
 async function getAllAvailableTrainers(req, res) {
-  const { startTime, endTime } = req.body;
+  const { startTime, endTime } = req.query;
   try {
     const trainers = await Trainer.find({
       availability: "Active",
@@ -40,7 +40,7 @@ async function getAllAvailableTrainers(req, res) {
         },
       },
     }).exec();
-    return res.json({ status: true, trainers });
+    return res.status(200).json(trainers);
   } catch (e) {
     console.log(e);
     return res.status(500).json({
