@@ -14,3 +14,5 @@ function validateStartEndDates(startDate, endDate) {
   }
   return true;
 }
+
+export { validateStartEndDates };
