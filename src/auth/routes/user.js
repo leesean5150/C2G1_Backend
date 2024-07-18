@@ -32,6 +32,11 @@ router.patch(
   verifyAdmin,
   AdminController.adminDeactivateTrainer
 );
+router.delete(
+  "/trainers/delete/:id",
+  verifyAdmin,
+  AdminController.adminDeleteTrainer
+);
 router.get("/trainers/list", verifyAdmin, AdminController.getAllTrainers);
 router.patch(
   "/trainers/update/:id",
@@ -39,14 +44,6 @@ router.patch(
   AdminController.adminUpdateTrainer
 );
 
-/* NEED TO IMPLEMENT DELETE!
-router.delete(
-    "/trainers/delete/:id",
-    verifyAdmin,
-    AdminController.admin
-);
-
-*/
 router.post("/trainers", verifyAdmin, AdminController.adminCreateTrainer);
 
 router.get(

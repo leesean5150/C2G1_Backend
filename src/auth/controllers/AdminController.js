@@ -131,12 +131,23 @@ async function adminDeactivateTrainer(req, res) {
     return res.status(500).json({ message: e });
   }
 }
-/**
- * adminDeactivateTrainer()
- * Input: id_ by params (/get/:id) and json object for trainer by body (JSON body)
- * Output: None
- * Description: with provided id parameter, find a certain trainer and update the related fields.
- */
+
+async function adminDeleteTrainer(req, res) {
+  try {
+    const { id } = req.params;
+    const trainer = await Trainer.findOneAndDelete({ _id: id }).exec();
+    if (!trainer) {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+    return res.json({ status: true, message: "Trainer deleted successfully" });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({
+      message: e,
+    });
+  }
+}
+
 async function adminUpdateTrainer(req, res) {
   try {
     const { id } = req.params;
@@ -221,4 +232,5 @@ export default {
   adminDeactivateTrainer,
   adminCreateTrainer,
   getAllAvailableTrainers,
+  adminDeleteTrainer,
 };
