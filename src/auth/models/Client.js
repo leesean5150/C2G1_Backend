@@ -8,10 +8,10 @@ const clientSchema = new mongoose.Schema({
   password: { type: String, required: true },
   country: { type: String, required: true },
   role: { type: String, default: "client" },
-  workshop: [
+  workshop_request: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Workshop",
+      ref: "WorkshopRequest",
     },
   ],
 });

@@ -3,7 +3,6 @@ import { Trainer } from "../../auth/models/Trainer.js";
 import { Client } from "../../auth/models/Client.js";
 import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
 import { validateStartEndDates } from "../../utils/dateUtils.js";
-import mongoose from "mongoose";
 
 /**
  * createWorkshop()
