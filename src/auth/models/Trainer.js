@@ -16,7 +16,9 @@ const trainerSchema = new mongoose.Schema({
   gender: { type: String, required: false },
   ongoing_workshops: { type: Number, default: 0, required: false },
   workshops_completed_total: { type: Number, default: 0, required: false },
-  workshops: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workshop" }],
+  workshop_request: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "WorkshopRequest" },
+  ],
   unavailableTimeslots: [{ start: Date, end: Date }],
 });
 

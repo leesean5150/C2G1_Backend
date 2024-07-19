@@ -1,5 +1,5 @@
 import { Trainer } from "../auth/models/Trainer.js";
-import { Workshop } from "../workshop/models/Workshop.js";
+import { WorkshopRequest } from "../workshop/models/WorkshopRequest.js";
 
 /**
  * Middleware to mark the current middleware as final and proceed to update trainers' unavailable timeslots.
@@ -48,7 +48,7 @@ const updateTrainerUnavailableTimeslots = async (trainerId) => {
     return;
   }
 
-  const workshops = await Workshop.find({ trainers: trainerId });
+  const workshops = await WorkshopRequest.find({ trainers: trainerId });
   const newUnavailableTimeslots = workshops.map((workshop) => ({
     start: workshop.start_date,
     end: workshop.end_date,
