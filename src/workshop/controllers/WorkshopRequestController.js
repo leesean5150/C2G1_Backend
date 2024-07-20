@@ -90,7 +90,6 @@ async function createWorkshopRequest(req, res, next) {
 
     req.client_id = client_id;
     req.workshop_id = savedWorkshopRequest._id;
-
     res.status(201).json({ message: "Workshop request created successfully" });
     next();
   } catch (error) {
@@ -239,9 +238,11 @@ async function approveRequest(req, res, next) {
 
     await workshop.save();
 
-    res.status(200).json(workshop);
+    console.log("workshop approved", workshop);
 
-    req.workshop_id = workshop._id;
+    req.workshop_data = workshop;
+
+    res.status(200).json({ workshop });
 
     next();
   } catch (error) {
@@ -268,7 +269,9 @@ async function rejectRequest(req, res, next) {
 
     await workshop.save();
 
-    res.status(200).json(workshop);
+    req.workshop_data = workshop;
+
+    res.status(200).json({ workshop });
     next();
   } catch (error) {
     console.log(error);

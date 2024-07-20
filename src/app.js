@@ -14,6 +14,7 @@ import { WorkshopSummaryRouter } from "./workshop/routes/workshopSummaryRoutes.j
 import { graphRouter } from "./graphs/routes/graphRoutes.js";
 import { WorkshopDataRouter } from "./workshop/routes/WorkshopDataRoutes.js";
 import { WorkshopRequestRouter } from "./workshop/routes/WorkshopRequestRoutes.js";
+import { notifRouter } from "./notif/route/notifroutes.js";
 
 const connectToDB = async () => {
   try {
@@ -59,11 +60,12 @@ const initializeApp = async () => {
 
   app.use("/products", productRoutes);
   app.use("/auth", UserRouter);
-//   app.use("/workshop", WorkshopRouter);
+  //   app.use("/workshop", WorkshopRouter);
   app.use("/workshopdata", WorkshopDataRouter);
   app.use("/workshoprequest", WorkshopRequestRouter);
   app.use("/workshop-summary", WorkshopSummaryRouter);
   app.use("/graph", graphRouter);
+  app.use("/notif", notifRouter);
 
   await connectToDB();
   return app;
