@@ -1,7 +1,7 @@
-import { notification } from "../model/notif";
-import { Workshop } from "../../workshop/models/Workshop";
-import { Admin } from "../../auth/models/Admin";
-import { Client } from "../../auth/models/Client";
+import { notification } from "../model/notif.js";
+import { Workshop } from "../../workshop/models/Workshop.js";
+import { Admin } from "../../auth/models/Admin.js";
+import { Client } from "../../auth/models/Client.js";
 
 const adminReadNotification = async (req, res, next) => {
   const { id } = req.params;

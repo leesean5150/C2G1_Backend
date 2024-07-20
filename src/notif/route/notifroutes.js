@@ -1,5 +1,5 @@
 import express from "express";
-import notifController from "../controllers/notifController";
+import notifController from "../controllers/notifController.js";
 
 const router = express.Router();
 

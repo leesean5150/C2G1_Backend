@@ -29,16 +29,23 @@ const clientSendNotification = async (req, res, next) => {
 };
 
 const adminSendNotification = async (req, res, next) => {
-  const workshop_id = req.workshop_id;
+  const workshop_datas = req.workshop_data;
 
   try {
-    const notificationDetails = await notification.find({
-      workshop: workshop_id,
+    const notificationDetails = await notification.findOne({
+      workshop: workshop_datas._id,
     });
-    const workshopDetails = await WorkshopRequest.findById(workshop_id);
+
     if (!notificationDetails) {
       return res.status(404).json({ message: "Notification not found" });
     }
+
+    const workshopDetails = await WorkshopRequest.findById(workshop_datas._id);
+
+    if (!workshopDetails) {
+      return res.status(404).json({ message: "Workshop request not found" });
+    }
+
     if (workshopDetails.status === "approved") {
       notificationDetails.message = "Workshop request has been approved";
     }
@@ -47,6 +54,7 @@ const adminSendNotification = async (req, res, next) => {
     }
 
     await notificationDetails.save();
+
     console.log("notification updated", notificationDetails);
   } catch (error) {
     console.error(error);
