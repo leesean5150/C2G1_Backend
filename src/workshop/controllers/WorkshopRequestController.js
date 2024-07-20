@@ -21,7 +21,9 @@ async function getAllWorkshopRequests(req, res, next) {
 
 async function getAllSubmittedWorkshops(req, res, next) {
   try {
-    const workshops = await WorkshopRequest.find({ status: "submitted" }).populate("workshop_data");
+    const workshops = await WorkshopRequest.find({
+      status: "submitted",
+    }).populate("workshop_data");
     return res.status(200).json(workshops);
   } catch (error) {
     console.log(error);
@@ -86,9 +88,11 @@ async function createWorkshopRequest(req, res, next) {
     clientData.workshop_request.push(savedWorkshopRequest._id);
     await clientData.save();
 
-    return res
-      .status(201)
-      .json({ message: "Workshop request created successfully" });
+    req.client_id = client_id;
+    req.workshop_id = savedWorkshopRequest._id;
+
+    res.status(201).json({ message: "Workshop request created successfully" });
+    next();
   } catch (error) {
     console.log(error);
     return res
@@ -218,7 +222,7 @@ async function addTrainers(req, res, next) {
   }
 }
 
-async function approveRequest(req, res) {
+async function approveRequest(req, res, next) {
   try {
     const { id } = req.params;
 
@@ -235,16 +239,18 @@ async function approveRequest(req, res) {
 
     await workshop.save();
 
-    return res.status(200).json(workshop);
+    res.status(200).json(workshop);
+
+    req.workshop_id = workshop._id;
+
+    next();
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({ message: "Failed to retrieve workshop", error });
+    res.status(500).json({ message: "Failed to retrieve workshop", error });
   }
 }
 
-async function rejectRequest(req, res) {
+async function rejectRequest(req, res, next) {
   try {
     const { rejectReason } = req.body;
     const { id } = req.params;
@@ -262,12 +268,11 @@ async function rejectRequest(req, res) {
 
     await workshop.save();
 
-    return res.status(200).json(workshop);
+    res.status(200).json(workshop);
+    next();
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({ message: "Failed to retrieve workshop", error });
+    res.status(500).json({ message: "Failed to retrieve workshop", error });
   }
 }
 
