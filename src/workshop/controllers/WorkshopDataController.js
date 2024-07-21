@@ -12,6 +12,19 @@ async function getAllWorkshopDatas(req, res, next) {
   }
 }
 
+async function getSingleWorkshopData(req, res, next) {
+  try {
+    const workshopId = req.params.id;
+    const workshop = await WorkshopData.findById(workshopId);
+    return res.json(workshop);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to create workshop", error });
+  }
+}
+
 async function createWorkshopData(req, res, next) {
   try {
     const { workshop_ID, workshop_name, workshop_type, workshop_details } =
@@ -37,8 +50,13 @@ async function createWorkshopData(req, res, next) {
 async function updateWorkshopData(req, res, next) {
   try {
     const { id } = req.params;
-    const { workshop_ID, workshop_name, workshop_type, workshop_details } =
-      req.body;
+    const {
+      workshop_ID,
+      workshop_name,
+      workshop_type,
+      workshop_details,
+      availability,
+    } = req.body;
 
     const workshopData = await WorkshopData.findOne({ _id: id });
     if (!workshopData) {
@@ -56,6 +74,9 @@ async function updateWorkshopData(req, res, next) {
     }
     if (workshop_details) {
       workshopData.workshop_details = workshop_details;
+    }
+    if (availability) {
+      workshopData.availability = availability;
     }
 
     await workshopData.save();
@@ -89,6 +110,7 @@ async function deleteWorkshopData(req, res, next) {
 
 export default {
   getAllWorkshopDatas,
+  getSingleWorkshopData,
   createWorkshopData,
   updateWorkshopData,
   deleteWorkshopData,

@@ -58,7 +58,7 @@ db.workshopdatas.insertMany([
     workshop_ID: "01",
     workshop_type: "Business Value Discovery",
     workshop_details: "Nothing to do with the snake.",
-    workshop_availability: "Available",
+    availability: "Available",
     workshop_requests: [],
   },
   {
@@ -66,7 +66,7 @@ db.workshopdatas.insertMany([
     workshop_ID: "02",
     workshop_type: "Business Value Discovery",
     workshop_details: "No its not about Indonesia.",
-    workshop_availability: "Available",
+    availability: "Available",
     workshop_requests: [],
   },
   {
@@ -74,7 +74,7 @@ db.workshopdatas.insertMany([
     workshop_ID: "03",
     workshop_type: "AI Platform",
     workshop_details: "hello world!",
-    workshop_availability: "Available",
+    availability: "Available",
     workshop_requests: [],
   },
   {
@@ -83,7 +83,7 @@ db.workshopdatas.insertMany([
     workshop_type: "Infrastructure and Demo",
     workshop_details:
       "Those saying its C sharp don't know what they're talking about...",
-    workshop_availability: "Available",
+    availability: "Available",
     workshop_requests: [],
   }
 ]);
