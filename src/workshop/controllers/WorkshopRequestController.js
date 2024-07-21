@@ -33,6 +33,23 @@ async function getAllSubmittedWorkshops(req, res, next) {
   }
 }
 
+async function getWorkshopRequest(req, res, next) {
+  try {
+    const { id } = req.params;
+    const workshop = await WorkshopRequest.findById(id)
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+    return res.json(workshop);
+  }
+  catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop", error });
+  }
+};
+
 async function createWorkshopRequest(req, res, next) {
   try {
     const {
@@ -315,6 +332,7 @@ async function deleteWorkshopRequest(req, res, next) {
 export default {
   getAllWorkshopRequests,
   getAllSubmittedWorkshops,
+  getWorkshopRequest,
   createWorkshopRequest,
   updatedWorkshopRequest,
   deleteWorkshopRequest,
