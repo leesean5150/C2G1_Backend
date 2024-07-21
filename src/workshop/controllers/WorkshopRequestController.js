@@ -21,7 +21,9 @@ async function getAllWorkshopRequests(req, res, next) {
 
 async function getAllSubmittedWorkshops(req, res, next) {
   try {
-    const workshops = await WorkshopRequest.find({ status: "submitted" }).populate("workshop_data");
+    const workshops = await WorkshopRequest.find({
+      status: "submitted",
+    }).populate("workshop_data");
     return res.status(200).json(workshops);
   } catch (error) {
     console.log(error);
@@ -202,15 +204,19 @@ async function addTrainers(req, res, next) {
       return res.status(404).json({ message: "Workshop not found" });
     }
 
+    console.log("BEFORE UPDATING TRAINER")
+
     await Promise.all(
       activeTrainers.map((trainerId) =>
         Trainer.findByIdAndUpdate(
           trainerId,
-          { $addToSet: { workshops: id } },
+          { $addToSet: { workshop_request: id } },
           { new: true }
         )
       )
     );
+
+    console.log("AFTER UPDATING TRAINER")
     updateMultipleTrainersUnavailableTimeslots(req, res, next);
   } catch (error) {
     console.log(error);

@@ -33,7 +33,7 @@ db.trainers.insertMany([
     workshops_completed_this_month: 0,
     ongoing_workshops: 0,
     workshops_completed_total: 0,
-    workshops: [],
+    workshop_request: [],
     unavailableTimeslots: [],
   },
   {
@@ -47,7 +47,7 @@ db.trainers.insertMany([
     workshops_completed_this_month: 0,
     ongoing_workshops: 0,
     workshops_completed_total: 0,
-    workshops: [],
+    workshop_request: [],
     unavailableTimeslots: [],
   },
 ]);
