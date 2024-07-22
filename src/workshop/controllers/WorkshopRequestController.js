@@ -359,6 +359,7 @@ export default {
     createWorkshopRequest,
     updatedWorkshopRequest,
     deleteWorkshopRequest,
+    deleteAllWorkshopRequests,
     addTrainers,
     approveRequest,
     rejectRequest,
