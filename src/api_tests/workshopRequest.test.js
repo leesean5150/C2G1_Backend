@@ -239,7 +239,6 @@ describe("WorkshopData CRUD operations", () => {
     });
 
     //Our Update function has a problem!!!!!!!! T.T
-    /*
     test("should update the WorkshopRequest", async() => {
         const response = await supertest(app)
             .patch(`/workshoprequest/${workshopRequestId}`)
@@ -277,7 +276,6 @@ describe("WorkshopData CRUD operations", () => {
         expect(updatedWorkshopRequest).toHaveProperty("request_message", "Updated message");
         expect(updatedWorkshopRequest).toHaveProperty("workshop_data", workshopDataIds[1]);
     });
-    */
 
     test("should delete the workshopRequest", async() => {
         const response = await supertest(app)

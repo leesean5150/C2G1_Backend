@@ -8,6 +8,8 @@ import {
 
 const router = express.Router();
 
+router.delete("/delete-all", WorkshopController.deleteAllWorkshops); //For testing
+
 router.post("/", WorkshopController.createWorkshop);
 router.get("/", WorkshopController.getAllWorkshops);
 router.get("/get/:id", WorkshopController.getOneWorkshop);
@@ -31,7 +33,7 @@ router.patch(
     WorkshopController.approveRequest
 );
 router.patch("/reject/:id", verifyAdmin, WorkshopController.rejectRequest);
-router.delete("/del/:id", verifyAdmin, WorkshopController.deleteWorkshop);
-router.delete("/delete-all", WorkshopController.deleteAllWorkshops); //For testing
+router.delete("/:id", verifyAdmin, WorkshopController.deleteWorkshop);
+
 
 export { router as WorkshopRouter };

@@ -268,7 +268,7 @@ async function approveRequest(req, res) {
         }
 
         workshop.status = "approved";
-        workshop.rejectReason = "N/A";
+        workshop.reject_reason = "N/A";
 
         await workshop.save();
 
@@ -283,7 +283,7 @@ async function approveRequest(req, res) {
 
 async function rejectRequest(req, res) {
     try {
-        const { rejectReason } = req.body;
+        const { reject_reason } = req.body;
         const { id } = req.params;
 
         const workshop = await Workshop.findOne({ _id: id });
@@ -295,7 +295,7 @@ async function rejectRequest(req, res) {
         }
 
         workshop.status = "rejected";
-        workshop.reject_reason = rejectReason;
+        workshop.reject_reason = reject_reason;
 
         await workshop.save();
 
