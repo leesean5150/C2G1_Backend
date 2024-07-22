@@ -8,32 +8,38 @@ describe("Testing Graph Functionality", () => {
     let tokenValue;
 
     beforeAll(async() => {
-        //1. Init App
-        app = await initializeApp();
+        try {
+            //1. Init App
+            app = await initializeApp();
 
-        //2-1. Login Admin (Superuser)
-        const response_login = await supertest(app).post("/auth/login/admin").send({
-            username: process.env.SUPERUSER_USERNAME,
-            password: process.env.SUPERUSER_PASSWORD,
-        });
-        const tokenCookie = response_login.headers['set-cookie'].find(cookie =>
-            cookie.startsWith('token=')
-        );
+            //2-1. Login Admin (Superuser)
+            const response_login = await supertest(app).post("/auth/login/admin").send({
+                username: process.env.SUPERUSER_USERNAME,
+                password: process.env.SUPERUSER_PASSWORD,
+            });
+            const tokenCookie = response_login.headers['set-cookie'].find(cookie =>
+                cookie.startsWith('token=')
+            );
 
-        //2-2. Store tokenValue for superuser
-        tokenValue = tokenCookie.split('=')[1].split(';')[0];
+            //2-2. Store tokenValue for superuser
+            tokenValue = tokenCookie.split('=')[1].split(';')[0];
 
-        //3. reset workshopSummary
-        const response_reset = await supertest(app).delete("/workshop-summary/delete-all");
+            //3. reset workshopSummary
+            await supertest(app).delete("/workshopsummary/delete-all");
+
+        } catch (error) {
+            console.error("Setup error:", error);
+            throw error;
+        }
     });
 
     afterAll(async() => {
-        await mongoose.disconnect();
+        await mongoose.disconnect()
     });
 
     test("should create workshop summaries for all months and years", async() => {
         const response = await supertest(app)
-            .post("/workshop-summary/create-default-workshop-summaries")
+            .post("/workshopsummary/create-default-workshop-summaries")
             .set('Cookie', `token=${tokenValue}`);
 
         expect(response.status).toBe(201);
