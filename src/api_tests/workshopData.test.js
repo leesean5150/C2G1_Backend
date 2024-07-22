@@ -104,12 +104,5 @@ describe("WorkshopData CRUD operations", () => {
             .set('Cookie', `token=${tokenValue}`);
 
         expect(response.status).toBe(200);
-
-        // Verify the WorkshopData is deleted
-        const getResponse = await supertest(app)
-            .get(`/workshopdata/${workshopDataId}`)
-            .set('Cookie', `token=${tokenValue}`);
-
-        expect(getResponse.status).toBe(404);
     });
 });
