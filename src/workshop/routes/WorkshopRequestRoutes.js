@@ -5,6 +5,8 @@ import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/up
 
 const router = express.Router();
 
+router.delete("/delete-all", WorkshopRequestController.deleteAllWorkshopRequests); //For testing
+
 router.get("/", WorkshopRequestController.getAllWorkshopRequests);
 router.get(
     "/getSubmitted",
@@ -12,7 +14,7 @@ router.get(
     WorkshopRequestController.getAllSubmittedWorkshops
 );
 router.post("/", WorkshopRequestController.createWorkshopRequest);
-router.patch("/:id", WorkshopRequestController.updatedWorkshopRequest);
+
 router.patch(
     "/approve/:id",
     verifyAdmin,
@@ -25,8 +27,8 @@ router.patch(
     verifyAdmin,
     WorkshopRequestController.rejectRequest
 );
+router.patch("/:id", WorkshopRequestController.updatedWorkshopRequest);
 
-router.delete("/delete-all", WorkshopRequestController.deleteAllWorkshopRequests); //For testing
+
 router.delete("/:id", WorkshopRequestController.deleteWorkshopRequest);
-
 export { router as WorkshopRequestRouter };

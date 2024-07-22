@@ -88,7 +88,7 @@ async function createWorkshopRequest(req, res, next) {
 
         return res
             .status(201)
-            .json({ message: "Workshop request created successfully" });
+            .json({ message: "Workshop request created successfully", workshopRequest: savedWorkshopRequest });
     } catch (error) {
         console.log(error);
         return res
@@ -117,7 +117,7 @@ async function updatedWorkshopRequest(req, res, next) {
         } = req.body;
 
         const workshopData = await WorkshopData.findOne({
-            workshop_id: workshop_id,
+            workshop_ID: workshop_id,
         });
 
         const updateFields = {
@@ -141,9 +141,15 @@ async function updatedWorkshopRequest(req, res, next) {
             updateFields, { new: true }
         );
 
+        if (!updatedWorkshopRequest) {
+            return res.status(404).json({ message: "Workshop request not found" });
+        }
+
+        console.log("Updated WorkshopRequest:", updatedWorkshopRequest);
+
         return res
             .status(200)
-            .json({ message: "Workshop request updated successfully" });
+            .json(updatedWorkshopRequest);
     } catch (error) {
         console.log(error);
         return res
@@ -303,27 +309,9 @@ async function deleteWorkshopRequest(req, res, next) {
 
 async function deleteAllWorkshopRequests(req, res, next) {
     try {
-        const workshopRequests = await WorkshopRequest.find({});
-        if (workshopRequests.length === 0) {
+        const result = await WorkshopRequest.deleteMany({});
+        if (result.deletedCount === 0) {
             return res.status(404).json({ message: "No workshop requests found to delete" });
-        }
-
-        for (const workshopRequest of workshopRequests) {
-            const workshop = await WorkshopData.findById(workshopRequest.workshop_data._id);
-            const requestIndex = workshop.workshop_request.indexOf(workshopRequest._id);
-            if (requestIndex !== -1) {
-                workshop.workshop_request.splice(requestIndex, 1);
-                await workshop.save();
-            }
-
-            const client = await Client.findById(workshopRequest.client._id);
-            const clientRequestIndex = client.workshop_request.indexOf(workshopRequest._id);
-            if (clientRequestIndex !== -1) {
-                client.workshop_request.splice(clientRequestIndex, 1);
-                await client.save();
-            }
-
-            await workshopRequest.deleteOne();
         }
 
         return res.status(200).json({ message: "All workshop requests deleted successfully" });
@@ -332,6 +320,7 @@ async function deleteAllWorkshopRequests(req, res, next) {
         return res.status(500).json({ message: "Failed to delete workshop requests", error });
     }
 }
+
 
 export default {
     getAllWorkshopRequests,

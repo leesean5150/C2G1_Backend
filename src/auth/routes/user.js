@@ -8,6 +8,7 @@ import verifyLoggedIn from "../../middlewares/verifyLoggedIn.js";
 
 const router = express.Router();
 
+router.delete("/delete-all-trainers", AdminController.deleteAllTrainers); //For testing
 router.get("/get-user-id/:username", UserController.getUserIdByUsername); //For testing
 
 router.post("/signup", UserController.signup);

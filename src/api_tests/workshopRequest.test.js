@@ -3,13 +3,17 @@ import initializeApp from "../app";
 import mongoose from "mongoose";
 import { WorkshopRequest } from "../workshop/models/WorkshopRequest";
 import { WorkshopData } from "../workshop/models/WorkshopData";
+import { CLIENT_RENEG_WINDOW } from "tls";
+import { resolve } from "path";
+import exp from "constants";
 
 describe("WorkshopData CRUD operations", () => {
     let app;
     let tokenValue;
-    let workshopRequestIds = [];
+    let workshopRequestId;
     let workshopDataIds = [];
     let clientId;
+    let trainerIds = [];
 
     beforeAll(async() => {
         try {
@@ -28,7 +32,7 @@ describe("WorkshopData CRUD operations", () => {
             //2-2. Store tokenValue for superuser
             tokenValue = tokenCookie.split('=')[1].split(';')[0];
 
-            //3. reset workshopData & workshopRequest
+            //3. reset workshopData, workshopRequest, trainers
             const workshopDataDeleteResponse = await supertest(app)
                 .delete("/workshopdata/delete-all")
                 .set('Cookie', `token=${tokenValue}`);
@@ -40,6 +44,10 @@ describe("WorkshopData CRUD operations", () => {
                 .set('Cookie', `token=${tokenValue}`);
 
             //expect(workshopRequestDeleteResponse.status).toBe(200);
+
+            const trainerDeleteResponse = await supertest(app)
+                .delete("/auth/delete-all-trainers")
+                .set('Cookie', `token=${tokenValue}`);
 
             // 4. Create WorkshopData entries (Preparation)
             const numbers = [1, 2, 3];
@@ -59,7 +67,7 @@ describe("WorkshopData CRUD operations", () => {
                 workshopDataIds.push(workshopDataId);
             }
 
-            //5. Client
+            //5. Client Preparation
             const response = await supertest(app).post("/auth/signup").send({
                 username: "client",
                 password: "client",
@@ -74,6 +82,32 @@ describe("WorkshopData CRUD operations", () => {
 
             const clientResponse = await supertest(app).get("/auth/get-user-id/client");
             clientId = clientResponse.body.userId;
+
+            //6. Trainer Preparation
+            const trainerResponse1 = await supertest(app).post("/auth/trainers")
+                .set('Cookie', `token=${tokenValue}`)
+                .send({
+                    username: "trainer1",
+                    password: "trainer1",
+                    email: "trainer1@gmail.com",
+                    fullname: "Trainer One",
+                    trainer_role: "role1"
+                });
+
+            const trainerResponse2 = await supertest(app).post("/auth/trainers")
+                .set('Cookie', `token=${tokenValue}`)
+                .send({
+                    username: "trainer2",
+                    password: "trainer2",
+                    email: "trainer2@gmail.com",
+                    fullname: "Trainer Two",
+                    trainer_role: "role2"
+                });
+
+            expect(trainerResponse1.status).toBe(200);
+            expect(trainerResponse2.status).toBe(200);
+
+            trainerIds.push(trainerResponse1.body._id, trainerResponse2.body._id);
 
         } catch (error) {
             console.error("Setup error:", error);
@@ -115,7 +149,145 @@ describe("WorkshopData CRUD operations", () => {
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty("message", "Workshop request created successfully");
 
-        workshopRequestIds[0] = response.body._id;
+        workshopRequestId = response.body.workshopRequest._id;
+    });
+
+    test("should return list including one entity", async() => {
+        const response = await supertest(app)
+            .get("/workshoprequest")
+            .set('Cookie', `token=${tokenValue}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toBeInstanceOf(Array);
+        expect(response.body.length).toBe(1); // we expect only one entry since we created one in the previous test
+
+        const workshopRequest = response.body[0];
+        expect(workshopRequest).toHaveProperty("_id", workshopRequestId);
+        expect(workshopRequest).toHaveProperty("company_role", "Manager");
+        expect(workshopRequest).toHaveProperty("company", "Test Company");
+        expect(workshopRequest).toHaveProperty("name", "John Doe");
+        expect(workshopRequest).toHaveProperty("email", "john.doe@example.com");
+        expect(workshopRequest).toHaveProperty("phone_number", 1234567890);
+        expect(workshopRequest).toHaveProperty("pax", 10);
+        expect(workshopRequest).toHaveProperty("deal_potential", 1000);
+        expect(workshopRequest).toHaveProperty("country", "Singapore");
+        expect(workshopRequest).toHaveProperty("venue", "Test Venue");
+        expect(workshopRequest).toHaveProperty("start_date", "2024-07-21T00:00:00.000Z");
+        expect(workshopRequest).toHaveProperty("end_date", "2024-07-22T00:00:00.000Z");
+        expect(workshopRequest).toHaveProperty("request_message", "Test message");
+        expect(workshopRequest.workshop_data).toHaveProperty("workshop_ID", "ID1");
+        expect(workshopRequest.client).toHaveProperty("_id", clientId);
+    });
+
+    test("should return list including one entity", async() => {
+        const response = await supertest(app)
+            .get("/workshoprequest/getSubmitted")
+            .set('Cookie', `token=${tokenValue}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toBeInstanceOf(Array);
+        expect(response.body.length).toBe(1); // we expect only one entry since we created one in the previous test
+
+        const workshopRequest = response.body[0];
+        expect(workshopRequest).toHaveProperty("_id", workshopRequestId);
+        expect(workshopRequest).toHaveProperty("company_role", "Manager");
+        expect(workshopRequest).toHaveProperty("company", "Test Company");
+        expect(workshopRequest).toHaveProperty("name", "John Doe");
+        expect(workshopRequest).toHaveProperty("email", "john.doe@example.com");
+        expect(workshopRequest).toHaveProperty("phone_number", 1234567890);
+        expect(workshopRequest).toHaveProperty("pax", 10);
+        expect(workshopRequest).toHaveProperty("deal_potential", 1000);
+        expect(workshopRequest).toHaveProperty("country", "Singapore");
+        expect(workshopRequest).toHaveProperty("venue", "Test Venue");
+        expect(workshopRequest).toHaveProperty("start_date", "2024-07-21T00:00:00.000Z");
+        expect(workshopRequest).toHaveProperty("end_date", "2024-07-22T00:00:00.000Z");
+        expect(workshopRequest).toHaveProperty("request_message", "Test message");
+        expect(workshopRequest.workshop_data).toHaveProperty("workshop_ID", "ID1");
+
+        expect(workshopRequest.client.toString()).toBe(clientId.toString());
+    });
+
+    test("should approve the WorkshopRequest and add trainers", async() => {
+        console.log(trainerIds);
+
+        const response = await supertest(app)
+            .patch(`/workshoprequest/approve/${workshopRequestId}`)
+            .set('Cookie', `token=${tokenValue}`)
+            .send({
+                trainerIds
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("status", "approved");
+        expect(response.body).toHaveProperty("trainers");
+        expect(response.body.trainers.length).toBe(2);
+
+        console.log("Approved WorkshopRequest ID:", workshopRequestId); // Log the ID
+    });
+
+    test("should reject the WorkshopRequest", async() => {
+        const response = await supertest(app)
+            .patch(`/workshoprequest/reject/${workshopRequestId}`)
+            .set('Cookie', `token=${tokenValue}`)
+            .send({
+                rejectReason: "Not enough budget"
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("status", "rejected");
+        expect(response.body).toHaveProperty("reject_reason", "Not enough budget");
+    });
+
+    //Our Update function has a problem!!!!!!!! T.T
+    /*
+    test("should update the WorkshopRequest", async() => {
+        const response = await supertest(app)
+            .patch(`/workshoprequest/${workshopRequestId}`)
+            .set('Cookie', `token=${tokenValue}`)
+            .send({
+                company_role: "Director",
+                company: "Updated Company",
+                name: "Jane Doe",
+                email: "jane.doe@example.com",
+                phone_number: 9876543210,
+                pax: 20,
+                deal_potential: 2000,
+                country: "Malaysia",
+                venue: "Updated Venue",
+                start_date: "2024-08-21",
+                end_date: "2024-08-22",
+                request_message: "Updated message",
+                workshop_id: "ID2"
+            });
+
+        expect(response.status).toBe(200);
+
+        const updatedWorkshopRequest = response.body;
+        expect(updatedWorkshopRequest).toHaveProperty("company_role", "Director");
+        expect(updatedWorkshopRequest).toHaveProperty("company", "Updated Company");
+        expect(updatedWorkshopRequest).toHaveProperty("name", "Jane Doe");
+        expect(updatedWorkshopRequest).toHaveProperty("email", "jane.doe@example.com");
+        expect(updatedWorkshopRequest).toHaveProperty("phone_number", 9876543210);
+        expect(updatedWorkshopRequest).toHaveProperty("pax", 20);
+        expect(updatedWorkshopRequest).toHaveProperty("deal_potential", 2000);
+        expect(updatedWorkshopRequest).toHaveProperty("country", "Malaysia");
+        expect(updatedWorkshopRequest).toHaveProperty("venue", "Updated Venue");
+        expect(updatedWorkshopRequest).toHaveProperty("start_date", "2024-08-21T00:00:00.000Z");
+        expect(updatedWorkshopRequest).toHaveProperty("end_date", "2024-08-22T00:00:00.000Z");
+        expect(updatedWorkshopRequest).toHaveProperty("request_message", "Updated message");
+        expect(updatedWorkshopRequest).toHaveProperty("workshop_data", workshopDataIds[1]);
+    });
+    */
+
+    test("should delete the workshopRequest", async() => {
+        const response = await supertest(app)
+            .delete(`/workshoprequest/${workshopRequestId}`)
+            .set('Cookie', `token=${tokenValue}`);
+
+        expect(response.status).toBe(200);
+
+        const msg = response.body;
+        expect(msg).toHaveProperty("message", "Workshop request deleted successfully");
     });
 
 });
