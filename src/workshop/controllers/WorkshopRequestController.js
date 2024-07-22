@@ -162,9 +162,6 @@ async function updatedWorkshopRequest(req, res, next) {
         if (!updatedWorkshopRequest) {
             return res.status(404).json({ message: "Workshop request not found" });
         }
-
-        console.log("Updated WorkshopRequest:", updatedWorkshopRequest);
-
         return res
             .status(200)
             .json(updatedWorkshopRequest);
@@ -226,7 +223,7 @@ async function addTrainers(req, res, next) {
         await Promise.all(
             activeTrainers.map((trainerId) =>
                 Trainer.findByIdAndUpdate(
-                    trainerId, { $addToSet: { workshops: id } }, { new: true }
+                    trainerId, { $addToSet: { workshop_request: id } }, { new: true }
                 )
             )
         );
@@ -235,18 +232,6 @@ async function addTrainers(req, res, next) {
         console.log(error);
         return res.status(500).json({ message: "Failed to add trainers", error });
     }
-    console.log("BEFORE UPDATING TRAINER")
-
-    await Promise.all(
-        activeTrainers.map((trainerId) =>
-            Trainer.findByIdAndUpdate(
-                trainerId, { $addToSet: { workshop_request: id } }, { new: true }
-            )
-        )
-    );
-
-    console.log("AFTER UPDATING TRAINER")
-    updateMultipleTrainersUnavailableTimeslots(req, res, next);
 }
 
 async function approveRequest(req, res) {
