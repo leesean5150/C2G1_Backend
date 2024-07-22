@@ -134,9 +134,7 @@ async function updatedWorkshopRequest(req, res, next) {
             workshop_id,
         } = req.body;
 
-        const workshopData = await WorkshopData.findOne({
-            workshop_ID: workshop_id,
-        });
+        const workshopData = await WorkshopData.findById(id);
 
         const updateFields = {
             ...(company_role && { company_role }),
