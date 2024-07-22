@@ -8,6 +8,9 @@ router.get("/", WorkshopDataController.getAllWorkshopDatas);
 router.get("/:id", verifyAdmin, WorkshopDataController.getSingleWorkshopData);
 router.post("/", verifyAdmin, WorkshopDataController.createWorkshopData);
 router.patch("/:id", verifyAdmin, WorkshopDataController.updateWorkshopData);
+
+
+router.delete("/delete-all", WorkshopDataController.deleteAllWorkshopData); //For testing
 router.delete("/:id", verifyAdmin, WorkshopDataController.deleteWorkshopData);
 
 export { router as WorkshopDataRouter };
