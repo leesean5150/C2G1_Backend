@@ -134,7 +134,7 @@ async function updatedWorkshopRequest(req, res, next) {
             workshop_id,
         } = req.body;
 
-        const workshopData = await WorkshopData.findById(id);
+        const workshopData = await WorkshopData.findOne({ workshop_ID: workshop_id });
 
         const updateFields = {
             ...(company_role && { company_role }),
@@ -184,7 +184,7 @@ async function addTrainers(req, res, next) {
 
         const activeTrainers = [];
         for (const trainerId of trainerIds) {
-            const trainer = await Trainer.findById({ _id: trainerId });
+            const trainer = await Trainer.findById(trainerId);
             if (!trainer || !trainer.availability) continue;
             const isTrainerUnavailable = trainer.unavailableTimeslots.some(
                 (timeslot) => {
@@ -295,7 +295,7 @@ async function rejectRequest(req, res) {
 async function deleteWorkshopRequest(req, res, next) {
     try {
         const { id } = req.params;
-        const workshopRequest = await WorkshopRequest.findById(id);
+        const workshopRequest = await WorkshopRequest.findOne({ _id: id });
         if (!workshopRequest) {
             return res.status(404).json({ message: "Workshop request not found" });
         }
@@ -303,11 +303,13 @@ async function deleteWorkshopRequest(req, res, next) {
             workshopRequest.workshop_data._id
         );
         await workshopRequest.deleteOne();
+        /*
         const requestIndex = workshop.workshop_request.indexOf(id);
         if (requestIndex === -1) {
             throw new Error(`Request with ID ${id} not found in the workshop.`);
         }
         workshop.workshop_request.splice(requestIndex, 1);
+        */
         await workshop.save();
         const client = await Client.findById(workshopRequest.client._id);
         const clientRequestIndex = client.workshop_request.indexOf(id);
