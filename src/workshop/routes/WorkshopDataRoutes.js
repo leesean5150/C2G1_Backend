@@ -4,7 +4,8 @@ import WorkshopDataController from "../controllers/WorkshopDataController.js";
 
 const router = express.Router();
 
-router.get("/", WorkshopDataController.getAllWorkshopDatas);
+router.get("/", verifyAdmin, WorkshopDataController.getAllWorkshopDatas);
+router.get("/available", WorkshopDataController.getAvailableWorkshopDatas);
 router.get("/:id", verifyAdmin, WorkshopDataController.getSingleWorkshopData);
 router.post("/", verifyAdmin, WorkshopDataController.createWorkshopData);
 router.patch("/:id", verifyAdmin, WorkshopDataController.updateWorkshopData);

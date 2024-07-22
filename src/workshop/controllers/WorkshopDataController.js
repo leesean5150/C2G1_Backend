@@ -12,6 +12,18 @@ async function getAllWorkshopDatas(req, res, next) {
   }
 }
 
+async function getAvailableWorkshopDatas(req, res, next) {
+  try {
+    const workshops = await WorkshopData.find({ availability: "Available" });
+    return res.json(workshops);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshops", error });
+  }
+}
+
 async function getSingleWorkshopData(req, res, next) {
   try {
     const workshopId = req.params.id;
@@ -110,6 +122,7 @@ async function deleteWorkshopData(req, res, next) {
 
 export default {
   getAllWorkshopDatas,
+  getAvailableWorkshopDatas,
   getSingleWorkshopData,
   createWorkshopData,
   updateWorkshopData,
