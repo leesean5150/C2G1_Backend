@@ -223,6 +223,8 @@ async function addTrainers(req, res, next) {
             return res.status(404).json({ message: "Workshop not found" });
         }
 
+        console.log("BEFORE UPDATING TRAINER");
+
         await Promise.all(
             activeTrainers.map((trainerId) =>
                 Trainer.findByIdAndUpdate(
@@ -230,23 +232,16 @@ async function addTrainers(req, res, next) {
                 )
             )
         );
-        updateMultipleTrainersUnavailableTimeslots(req, res, next);
+
+        console.log("AFTER UPDATING TRAINER");
+
+        await updateMultipleTrainersUnavailableTimeslots(req, res, next);
+
+        //return res.status(200).json();
     } catch (error) {
         console.log(error);
         return res.status(500).json({ message: "Failed to add trainers", error });
     }
-    console.log("BEFORE UPDATING TRAINER")
-
-    await Promise.all(
-        activeTrainers.map((trainerId) =>
-            Trainer.findByIdAndUpdate(
-                trainerId, { $addToSet: { workshop_request: id } }, { new: true }
-            )
-        )
-    );
-
-    console.log("AFTER UPDATING TRAINER")
-    updateMultipleTrainersUnavailableTimeslots(req, res, next);
 }
 
 async function approveRequest(req, res) {
