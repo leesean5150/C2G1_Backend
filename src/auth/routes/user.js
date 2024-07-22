@@ -5,6 +5,8 @@ import AdminController from "../controllers/AdminController.js";
 
 import verifyAdmin from "../../middlewares/verifyAdmin.js";
 import verifyLoggedIn from "../../middlewares/verifyLoggedIn.js";
+import verifyTrainer from "../../middlewares/verifyTrainer.js";
+import TrainerController from "../controllers/TrainerController.js";
 
 const router = express.Router();
 
@@ -54,5 +56,17 @@ router.get(
     verifyAdmin,
     AdminController.getAllAvailableTrainers
 );
+
+router.get(
+  "/allocatedworkshops",
+  verifyTrainer,
+  TrainerController.getAllocatedWorkshops
+)
+
+router.patch(
+  "/updateutilisation/:id",
+  verifyTrainer,
+  TrainerController.updateUtilisation
+)
 
 export { router as UserRouter };

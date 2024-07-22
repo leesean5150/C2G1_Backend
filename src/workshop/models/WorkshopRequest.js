@@ -54,6 +54,27 @@ const workshopRequestSchema = new Schema(
       type: String,
       default: "",
     },
+    utilisation: {
+      type: [],
+      default: [
+        {
+          hours: 0,
+          utilisation_details: "",
+        },
+        {
+          hours: 0,
+          utilisation_details: "",
+        },
+        {
+          hours: 0,
+          utilisation_details: "",
+        },
+        {
+          hours: 0,
+          utilisation_details: "",
+        },
+      ],
+    },
     workshop_data: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "WorkshopData",

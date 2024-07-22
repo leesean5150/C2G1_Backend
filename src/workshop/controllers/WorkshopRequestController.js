@@ -20,16 +20,35 @@ async function getAllWorkshopRequests(req, res, next) {
 }
 
 async function getAllSubmittedWorkshops(req, res, next) {
-    try {
-        const workshops = await WorkshopRequest.find({ status: "submitted" }).populate("workshop_data");
-        return res.status(200).json(workshops);
-    } catch (error) {
-        console.log(error);
-        return res
-            .status(500)
-            .json({ message: "Failed to retrieve workshops", error });
-    }
+  try {
+    const workshops = await WorkshopRequest.find({
+      status: "submitted",
+    }).populate("workshop_data");
+    return res.status(200).json(workshops);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshops", error });
+  }
 }
+
+async function getWorkshopRequest(req, res, next) {
+  try {
+    const { id } = req.params;
+    const workshop = await WorkshopRequest.findById(id)
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+    return res.json(workshop);
+  }
+  catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop", error });
+  }
+};
 
 async function createWorkshopRequest(req, res, next) {
     try {
@@ -217,6 +236,24 @@ async function addTrainers(req, res, next) {
         console.log(error);
         return res.status(500).json({ message: "Failed to add trainers", error });
     }
+    console.log("BEFORE UPDATING TRAINER")
+
+    await Promise.all(
+      activeTrainers.map((trainerId) =>
+        Trainer.findByIdAndUpdate(
+          trainerId,
+          { $addToSet: { workshop_request: id } },
+          { new: true }
+        )
+      )
+    );
+
+    console.log("AFTER UPDATING TRAINER")
+    updateMultipleTrainersUnavailableTimeslots(req, res, next);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to add trainers", error });
+  }
 }
 
 async function approveRequest(req, res) {
@@ -323,13 +360,13 @@ async function deleteAllWorkshopRequests(req, res, next) {
 
 
 export default {
-    getAllWorkshopRequests,
-    getAllSubmittedWorkshops,
-    createWorkshopRequest,
-    updatedWorkshopRequest,
-    deleteWorkshopRequest,
-    deleteAllWorkshopRequests,
-    addTrainers,
-    approveRequest,
-    rejectRequest,
+  getAllWorkshopRequests,
+  getAllSubmittedWorkshops,
+  getWorkshopRequest,
+  createWorkshopRequest,
+  updatedWorkshopRequest,
+  deleteWorkshopRequest,
+  addTrainers,
+  approveRequest,
+  rejectRequest,
 };
