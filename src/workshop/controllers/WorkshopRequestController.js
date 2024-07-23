@@ -104,12 +104,10 @@ async function createWorkshopRequest(req, res, next) {
     clientData.workshop_request.push(savedWorkshopRequest._id);
     await clientData.save();
 
-    return res
-      .status(201)
-      .json({
-        message: "Workshop request created successfully",
-        workshopRequest: savedWorkshopRequest,
-      });
+    return res.status(201).json({
+      message: "Workshop request created successfully",
+      workshopRequest: savedWorkshopRequest,
+    });
   } catch (error) {
     console.log(error);
     return res

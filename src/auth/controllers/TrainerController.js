@@ -16,7 +16,29 @@ async function getAllocatedWorkshops(req, res) {
         .status(404)
         .json({ status: false, message: "Trainer not found" });
     }
-    const trainer_workshops = trainer.workshop_request
+    const trainer_workshops = trainer.workshop_request;
+    return res.json({ trainer_workshops });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+}
+
+async function getTeammates(req, res, next) {
+  try {
+    const trainer = await Trainer.findById(req.user.id)
+      .populate({
+        path: "workshop_request",
+        populate: {
+          path: "trainers",
+        },
+      })
+      .exec();
+    if (!trainer) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Trainer not found" });
+    }
+    const trainer_workshops = trainer.workshop_request;
     return res.json({ trainer_workshops });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
@@ -53,4 +75,4 @@ async function updateUtilisation(req, res) {
   }
 }
 
-export default { getAllocatedWorkshops, updateUtilisation };
+export default { getAllocatedWorkshops, getTeammates, updateUtilisation };
