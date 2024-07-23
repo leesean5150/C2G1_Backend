@@ -11,8 +11,13 @@ async function getAllocatedWorkshops(req, res) {
         },
       })
       .exec();
-
-    return res.json({ trainer });
+    if (!trainer) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Trainer not found" });
+    }
+    const trainer_workshops = trainer.workshop_request
+    return res.json({ trainer_workshops });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
   }
