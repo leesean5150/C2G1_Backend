@@ -10,6 +10,11 @@ import {
 
 const router = express.Router();
 
+router.delete(
+  "/delete-all",
+  WorkshopRequestController.deleteAllWorkshopRequests
+); //For testing
+
 router.get("/", WorkshopRequestController.getAllWorkshopRequests);
 router.get(
   "/getSubmitted",
@@ -37,6 +42,7 @@ router.patch(
   WorkshopRequestController.rejectRequest,
   adminSendNotification
 );
-router.delete("/:id", WorkshopRequestController.deleteWorkshopRequest);
+router.patch("/:id", WorkshopRequestController.updatedWorkshopRequest);
 
+router.delete("/:id", WorkshopRequestController.deleteWorkshopRequest);
 export { router as WorkshopRequestRouter };

@@ -13,8 +13,8 @@ const workshopDataSchema = new Schema(
       required: true,
     },
     availability: {
-      type: Boolean,
-      default: true,
+      type: String,
+      default: "Available",
     },
     workshop_type: {
       type: String,

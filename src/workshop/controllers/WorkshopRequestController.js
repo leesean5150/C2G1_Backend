@@ -33,6 +33,22 @@ async function getAllSubmittedWorkshops(req, res, next) {
   }
 }
 
+async function getWorkshopRequest(req, res, next) {
+  try {
+    const { id } = req.params;
+    const workshop = await WorkshopRequest.findById(id);
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+    return res.json(workshop);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop", error });
+  }
+}
+
 async function createWorkshopRequest(req, res, next) {
   try {
     const {
@@ -120,7 +136,7 @@ async function updatedWorkshopRequest(req, res, next) {
     } = req.body;
 
     const workshopData = await WorkshopData.findOne({
-      workshop_id: workshop_id,
+      workshop_ID: workshop_id,
     });
 
     const updateFields = {
@@ -145,9 +161,10 @@ async function updatedWorkshopRequest(req, res, next) {
       { new: true }
     );
 
-    return res
-      .status(200)
-      .json({ message: "Workshop request updated successfully" });
+    if (!updatedWorkshopRequest) {
+      return res.status(404).json({ message: "Workshop request not found" });
+    }
+    return res.status(200).json(updatedWorkshopRequest);
   } catch (error) {
     console.log(error);
     return res
@@ -169,7 +186,7 @@ async function addTrainers(req, res, next) {
 
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
-      const trainer = await Trainer.findById({ _id: trainerId });
+      const trainer = await Trainer.findById(trainerId);
       if (!trainer || !trainer.availability) continue;
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
         (timeslot) => {
@@ -205,23 +222,30 @@ async function addTrainers(req, res, next) {
       return res.status(404).json({ message: "Workshop not found" });
     }
 
+    console.log("BEFORE UPDATING TRAINER");
+
     await Promise.all(
       activeTrainers.map((trainerId) =>
         Trainer.findByIdAndUpdate(
           trainerId,
-          { $addToSet: { workshops: id } },
+          { $addToSet: { workshop_request: id } },
           { new: true }
         )
       )
     );
-    updateMultipleTrainersUnavailableTimeslots(req, res, next);
+
+    console.log("AFTER UPDATING TRAINER");
+
+    await updateMultipleTrainersUnavailableTimeslots(req, res, next);
+
+    //return res.status(200).json();
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to add trainers", error });
   }
 }
 
-async function approveRequest(req, res, next) {
+async function approveRequest(req, res) {
   try {
     const { id } = req.params;
 
@@ -282,7 +306,7 @@ async function rejectRequest(req, res, next) {
 async function deleteWorkshopRequest(req, res, next) {
   try {
     const { id } = req.params;
-    const workshopRequest = await WorkshopRequest.findById(id);
+    const workshopRequest = await WorkshopRequest.findOne({ _id: id });
     if (!workshopRequest) {
       return res.status(404).json({ message: "Workshop request not found" });
     }
@@ -290,11 +314,13 @@ async function deleteWorkshopRequest(req, res, next) {
       workshopRequest.workshop_data._id
     );
     await workshopRequest.deleteOne();
-    const requestIndex = workshop.workshop_request.indexOf(id);
-    if (requestIndex === -1) {
-      throw new Error(`Request with ID ${id} not found in the workshop.`);
-    }
-    workshop.workshop_request.splice(requestIndex, 1);
+    /*
+        const requestIndex = workshop.workshop_request.indexOf(id);
+        if (requestIndex === -1) {
+            throw new Error(`Request with ID ${id} not found in the workshop.`);
+        }
+        workshop.workshop_request.splice(requestIndex, 1);
+        */
     await workshop.save();
     const client = await Client.findById(workshopRequest.client._id);
     const clientRequestIndex = client.workshop_request.indexOf(id);
@@ -314,12 +340,34 @@ async function deleteWorkshopRequest(req, res, next) {
   }
 }
 
+async function deleteAllWorkshopRequests(req, res, next) {
+  try {
+    const result = await WorkshopRequest.deleteMany({});
+    if (result.deletedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "No workshop requests found to delete" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "All workshop requests deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to delete workshop requests", error });
+  }
+}
+
 export default {
   getAllWorkshopRequests,
   getAllSubmittedWorkshops,
+  getWorkshopRequest,
   createWorkshopRequest,
   updatedWorkshopRequest,
   deleteWorkshopRequest,
+  deleteAllWorkshopRequests,
   addTrainers,
   approveRequest,
   rejectRequest,

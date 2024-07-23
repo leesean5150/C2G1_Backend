@@ -22,7 +22,7 @@ const workshopSummarySchema = new Schema({
         required: false,
     },
     // workshops: [{ type: mongoose.Schema.Types.ObjectId, ref: "Workshop" }],
-    workshops: [],
+    workshopRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "WorkshopRequest" }],
 });
 
 const WorkshopSummaryModel = mongoose.model(

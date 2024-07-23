@@ -24,15 +24,24 @@ describe("Testing Client Endpoints", () => {
     expect(response.status).toBe(200);
   });
 
+  test("testing invalid login", async () => {
+    const response = await supertest(app).post("/auth/login/client").send({
+      username: "invalidusername",
+      password: "invalidpassword",
+    });
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe("Invalid username");
+  });
+
   test("testing login with client account", async () => {
     const response = await supertest(app).post("/auth/login/client").send({
       username: "client",
       password: "client",
     });
-    const tokenCookie = response.headers['set-cookie'].find(cookie => 
-      cookie.startsWith('token=')
+    const tokenCookie = response.headers["set-cookie"].find((cookie) =>
+      cookie.startsWith("token=")
     );
-    tokenValue = tokenCookie.split('=')[1].split(';')[0];
+    tokenValue = tokenCookie.split("=")[1].split(";")[0];
     expect(response.headers["set-cookie"]).toBeDefined();
     expect(response.headers["content-type"]).toEqual(
       expect.stringContaining("json")
@@ -42,8 +51,8 @@ describe("Testing Client Endpoints", () => {
 
   test("testing verification of logged-in client", async () => {
     const response = await supertest(app)
-    .get("/auth/verify") 
-    .set('Cookie', `token=${tokenValue}`);
+      .get("/auth/verify")
+      .set("Cookie", `token=${tokenValue}`);
     expect(response.status).toBe(200);
     expect(response.body.status).toBe(true);
     expect(response.body.message).toBe("Authorized");
@@ -60,7 +69,7 @@ describe("Testing Client Endpoints", () => {
   test("testing verification with an invalid token (unauthorized)", async () => {
     const response = await supertest(app)
       .get("/auth/verify")
-      .set('Cookie', `token=invalidtoken`);
+      .set("Cookie", `token=invalidtoken`);
 
     expect(response.status).toBe(401);
     expect(response.body.status).toBe(false);
@@ -69,21 +78,14 @@ describe("Testing Client Endpoints", () => {
 
   test("testing logout of client account", async () => {
     const response = await supertest(app)
-    .get("/auth/verify") 
-    .set('Cookie', `token=${tokenValue}`);
+      .get("/auth/logout")
+      .set("Cookie", `token=${tokenValue}`);
     expect(response.status).toBe(200);
     expect(response.body.status).toBe(true);
-    expect(response.body.message).toBe("Authorized");
-    expect(response.body.role).toBe("client");
-    const response1 = await supertest(app).get("/auth/logout");
-    expect(response1.status).toBe(200);
-    expect(response1.body.status).toBe(true);
-    expect(response1.body.message).toBe("Logged out");
-    const verifyResponse = await supertest(app).get("/auth/verify");
-    expect(verifyResponse.status).toBe(401);
+    expect(response.body.message).toBe("Logged out");
   });
 
   afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 });

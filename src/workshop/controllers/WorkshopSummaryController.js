@@ -1,4 +1,5 @@
 import { WorkshopSummary } from "../models/WorkshopSummary.js";
+import { WorkshopRequest } from "../models/WorkshopRequest.js";
 import { Workshop } from "../models/Workshop.js";
 import {get } from "mongoose";
 
@@ -26,7 +27,7 @@ async function createWorkshopSummaries(req, res, next) {
                     month: month,
                     actual_attendance: 0,
                     expected_attendance: 0,
-                    workshops: []
+                    workshopRequests: []
                 });
                 summaries.push(newWorkshopSummary.save());
             }
@@ -69,13 +70,13 @@ async function createWorkshopSummary(req, res, next) {
 /**
  * getAllWorkshops()
  * Input: None
- * Output: workshops (json)
+ * Output: workshopRequests (json)
  * Description: return all workshop requests (as JSON) existing in db.
  */
 async function getAllWorkshopSummary(req, res, next) {
     try {
-        const workshopSummary = await WorkshopSummary.find();
-        return res.status(200).json(workshopSummary);
+        const workshopSummaries = await WorkshopSummary.find();
+        return res.status(200).json(workshopSummaries);
     } catch (error) {
         console.log(error);
         return res
@@ -149,8 +150,8 @@ async function resetWorkshopSummary(req, res) {
 /**
  * searchWorkshops()
  * Input: json object including {attributeName, attributeContent} by body (JSON body)
- * Output: the workshops (json)
- * Description: with provided info, find workshops that matches to the filter from the database and return them.
+ * Output: the workshopRequests (json)
+ * Description: with provided info, find workshopRequests that matches to the filter from the database and return them.
  */
 async function searchWorkshopSummary(req, res) {
     try {
@@ -179,24 +180,23 @@ async function searchWorkshopSummary(req, res) {
  * Output: None
  * Description: Updates both the trainer and workshop documents to establish a two-way link between them.
  */
-async function addWorkshop(req, res) {
+async function addWorkshopRequest(req, res) {
     try {
-        const { workshopId, workshopSummaryId } = req.body;
+        const { workshopRequestId, workshopSummaryId } = req.body;
 
         // Fetch the Trainer document to check if the trainer is active
-        const workshop = await Workshop.findById(workshopId);
-        if (!workshop) {
-            return res.status(404).json({ message: "workshop not found" });
+        const workshopRequest = await WorkshopRequest.findById(workshopRequestId);
+        if (!workshopRequest) {
+            return res.status(404).json({ message: "workshop request not found" });
         }
 
-        // Check if the trainer is active
-        if (!workshop.availability) {
+        // Check if the workshop request is approved
+        if (workshopRequest.status !== "approved") {
             return res.status(400).json({ message: "workshop not approved" });
         }
 
-        // Update the Workshop document to include the trainerId in its trainers array
         const updatedWorkshopSummary = await WorkshopSummary.findByIdAndUpdate(
-            workshopSummaryId, { $addToSet: { workshops: workshopId } }, // Use $addToSet to avoid duplicates
+            workshopSummaryId, { $addToSet: { workshopRequests: workshopRequestId } }, // Use $addToSet to avoid duplicates
             { new: true }
         );
 
@@ -207,7 +207,7 @@ async function addWorkshop(req, res) {
         // Optionally, send back the updated documents or a success message
         return res.status(200).json({
             message: "Successfully added workshop to workshop summary",
-            updatedWorkshopSummary,
+            updatedWorkshopSummary: updatedWorkshopSummary,
         });
     } catch (error) {
         console.log(error);
@@ -223,5 +223,5 @@ export default {
     deleteWorkshopSummary: deleteWorkshopSummary,
     searchWorkshopSummary: searchWorkshopSummary,
     resetWorkshopSummary: resetWorkshopSummary,
-    addWorkshop: addWorkshop,
+    addWorkshopRequest: addWorkshopRequest,
 };

@@ -5,6 +5,10 @@ import nodeMailer from "nodemailer";
 import { Client } from "../models/Client.js";
 import { Trainer } from "../models/Trainer.js";
 import { Admin } from "../models/Admin.js";
+
+
+
+
 /**
  * signup()
  * Input: json object for client by body (JSON body)
@@ -178,10 +182,33 @@ async function logout(req, res) {
     }
 }
 
+/**
+ * getUserIdByUsername()
+ * Input: username by params (URL parameter)
+ * Output: user ID
+ * Description: with provided username, query db to find a certain user and return their ID.
+ */
+async function getUserIdByUsername(req, res) {
+    try {
+        const { username } = req.params;
+        const user = await Client.findOne({ username }).exec();
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.json({ userId: user._id });
+    } catch (e) {
+        console.log(e);
+        return res.status(500).json({
+            message: e,
+        });
+    }
+}
+
 export default {
     signup,
     login,
     forgotpassword,
     resetpassword,
     logout,
+    getUserIdByUsername,
 };
