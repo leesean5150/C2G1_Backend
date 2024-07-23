@@ -60,7 +60,7 @@ const initializeApp = async () => {
 
   app.use("/products", productRoutes);
   app.use("/auth", UserRouter);
-  //   app.use("/workshop", WorkshopRouter);
+  app.use("/workshop", WorkshopRouter);
   app.use("/workshopdata", WorkshopDataRouter);
   app.use("/workshoprequest", WorkshopRequestRouter);
   app.use("/workshop-summary", WorkshopSummaryRouter);
