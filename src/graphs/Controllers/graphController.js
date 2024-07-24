@@ -1,9 +1,10 @@
 import { WorkshopSummary } from "../../workshop/models/WorkshopSummary.js";
+import { WorkshopRequest } from "../../workshop/models/WorkshopRequest.js";
 import { Workshop } from "../../workshop/models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { get } from "http";
 
-async function getGraphWorkshopSummary(req, res, next) {
+async function getWorkshopSummaryGraph(req, res, next) {
   try {
     const months = [
       "Jan",
@@ -107,7 +108,7 @@ async function getTodayGraph(req, res, next) {
     const todayData = { data: [] };
     const today = new Date();
 
-    const workshops = await Workshop.find({
+    const workshops = await WorkshopRequest.find({
       start_date: { $lte: today },
       end_date: { $gte: today },
       status: "approved",
@@ -151,8 +152,123 @@ async function getTodayGraph(req, res, next) {
   }
 }
 
+async function getTotalPieChartGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ];
+
+    const workshops = await WorkshopRequest.aggregate(aggregatePipeline);
+
+    const statCounter = workshops.reduce(
+      (acc, workshop) => {
+        if (workshop._id === "approved") {
+          acc.accepted_count = workshop.count;
+        } else if (workshop._id === "rejected") {
+          acc.rejected_count = workshop.count;
+        } else {
+          acc.pending_count = workshop.count;
+        }
+      },
+      { accepted_count: 0, rejected_count: 0, pending_count: 0 }
+    );
+
+    // const workshops = await WorkshopRequest.find();
+    // const { accepted_count, rejected_count, pending_count } = workshops.reduce(
+    //   (acc, workshop) => {
+    //     if (workshop.status === "approved") {
+    //       acc.accepted_count++;
+    //     } else if (workshop.status === "rejected") {
+    //       acc.rejected_count++;
+    //     } else {
+    //       acc.pending_count++;
+    //     }
+    //     return acc;
+    //   },
+    //   { accepted_count: 0, rejected_count: 0, pending_count: 0 }
+    // );
+
+    const pieChartData = [
+      { name: "Workshops accepted", value: statCounter.accepted_count },
+      { name: "Workshops rejected", value: statCounter.rejected_count },
+      { name: "pending", value: statCounter.pending_count },
+    ];
+    return res.status(200).json(pieChartData);
+  } catch (error) {
+    console.log("error getting pie chart data:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve pie chart data", error });
+  }
+}
+
+async function getYearsPieChartGraph(req, res, next) {
+  try {
+    // aggregatePipeline = [{}];
+    const years = [2021, 2022, 2023, 2024, 2025];
+
+    const pieChartData = {};
+    await Promise.all(
+      years.map(async (year) => {
+        const workshops = await WorkshopRequest.find({
+          start_date: {
+            $gte: new Date(year, 0, 1),
+            $lte: new Date(year, 11, 31),
+          },
+        });
+        const { accepted_count, rejected_count, pending_count } =
+          workshops.reduce(
+            (acc, workshop) => {
+              if (workshop.status === "approved") {
+                acc.accepted_count++;
+              } else if (workshop.status === "rejected") {
+                acc.rejected_count++;
+              } else {
+                acc.pending_count++;
+              }
+              return acc;
+            },
+            { accepted_count: 0, rejected_count: 0, pending_count: 0 }
+          );
+        pieChartData[year] = [
+          { name: "Workshops accepted", value: accepted_count },
+          { name: "Workshops rejected", value: rejected_count },
+          { name: "pending", value: pending_count },
+        ];
+      })
+    );
+
+    return res.status(200).json(pieChartData);
+  } catch (error) {
+    console.log("error getting pie chart data:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve pie chart data", error });
+  }
+}
+
+async function getWorkshopTypesData(req, res, next) {
+  try {
+    // total workshoptypesData
+    const workshopTypesData = [];
+    const workshops = await WorkshopRequest.find();
+  } catch (error) {
+    console.log("error getting workshop types data:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshop types data", error });
+  }
+}
+
 export default {
-  getGraphWorkshopSummary: getGraphWorkshopSummary,
+  getWorkshopSummaryGraph: getWorkshopSummaryGraph,
   getTrainerGraph: getTrainerGraph,
   getTodayGraph: getTodayGraph,
+  getTotalPieChartGraph: getTotalPieChartGraph,
+  getYearsPieChartGraph: getYearsPieChartGraph,
 };
