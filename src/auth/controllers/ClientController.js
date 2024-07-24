@@ -11,7 +11,8 @@ async function getPendingWorkshops(req, res) {
         .json({ status: false, message: "Trainer not found" });
     }
 
-    return res.json({ client });
+    const workshop_requests = client.workshop_request;
+    return res.json({ workshop_requests });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
   }
