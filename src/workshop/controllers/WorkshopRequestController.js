@@ -33,6 +33,20 @@ async function getAllSubmittedWorkshops(req, res, next) {
   }
 }
 
+async function getAllApprovedWorkshops(req, res, next) {
+  try {
+    const data = [];
+    const aggregatePipeline = [{ $match: { status: "approved" } }];
+
+    const workshops = await WorkshopRequest.aggregate(aggregatePipeline);
+    data.push(workshops);
+    return res.status(200).json(data);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error });
+  }
+}
+
 async function getWorkshopRequest(req, res, next) {
   try {
     const { id } = req.params;
@@ -356,6 +370,7 @@ async function deleteAllWorkshopRequests(req, res, next) {
 export default {
   getAllWorkshopRequests,
   getAllSubmittedWorkshops,
+  getAllApprovedWorkshops,
   getWorkshopRequest,
   createWorkshopRequest,
   updatedWorkshopRequest,
