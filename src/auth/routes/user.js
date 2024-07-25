@@ -4,9 +4,11 @@ import UserController from "../controllers/UserController.js";
 import AdminController from "../controllers/AdminController.js";
 
 import verifyAdmin from "../../middlewares/verifyAdmin.js";
-import verifyLoggedIn from "../../middlewares/verifyLoggedIn.js";
 import verifyTrainer from "../../middlewares/verifyTrainer.js";
+import verifyClient from "../../middlewares/verifyClient.js";
+import verifyLoggedIn from "../../middlewares/verifyLoggedIn.js";
 import TrainerController from "../controllers/TrainerController.js";
+import ClientController from "../controllers/ClientController.js";
 
 const router = express.Router();
 
@@ -69,6 +71,12 @@ router.patch(
   "/updateutilisation/:id",
   verifyTrainer,
   TrainerController.updateUtilisation
+);
+
+router.get(
+  "/pendingworkshops",
+  verifyClient,
+  ClientController.getPendingWorkshops
 );
 
 export { router as UserRouter };
