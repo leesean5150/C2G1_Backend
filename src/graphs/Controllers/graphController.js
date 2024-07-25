@@ -209,8 +209,34 @@ async function getTotalPieChartGraph(req, res, next) {
 
 async function getYearsPieChartGraph(req, res, next) {
   try {
-    // aggregatePipeline = [{}];
     const years = [2021, 2022, 2023, 2024, 2025];
+    const aggregatePipeline = [
+      {
+        $match: {
+          start_date: {
+            $gte: new Date(2021, 0, 1),
+            $lte: new Date(2025, 11, 31),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { year: { $year: "$start_date" }, status: "$status" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.year",
+          statuses: { $push: { status: "$_id.status", count: "$count" } },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ];
 
     const pieChartData = {};
     await Promise.all(
