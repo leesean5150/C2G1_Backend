@@ -3,6 +3,7 @@ import { Trainer } from "../../auth/models/Trainer.js";
 import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/updateUnavailableTimeslots.js";
 import { WorkshopData } from "../models/WorkshopData.js";
 import { WorkshopRequest } from "../models/WorkshopRequest.js";
+import { checkTimeslotOverlap } from "../../utils/dateUtils.js";
 
 async function getAllWorkshopRequests(req, res, next) {
   try {
@@ -190,12 +191,12 @@ async function addTrainers(req, res, next) {
       if (!trainer || !trainer.availability) continue;
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
         (timeslot) => {
-          const timeslotStart = new Date(timeslot.start);
-          const timeslotEnd = new Date(timeslot.end);
-          const workshopStart = new Date(start_date);
-          const workshopEnd = new Date(end_date);
-
-          return workshopStart < timeslotEnd && workshopEnd > timeslotStart;
+          return checkTimeslotOverlap(
+            start_date,
+            end_date,
+            timeslot.start,
+            timeslot.end
+          );
         }
       );
 
