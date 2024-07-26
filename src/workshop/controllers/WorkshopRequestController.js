@@ -4,6 +4,7 @@ import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/up
 import { WorkshopData } from "../models/WorkshopData.js";
 import { WorkshopRequest } from "../models/WorkshopRequest.js";
 import { checkTimeslotOverlap } from "../../utils/dateUtils.js";
+import { now } from "mongoose";
 
 async function getAllWorkshopRequests(req, res, next) {
   try {
@@ -185,14 +186,36 @@ async function addTrainers(req, res, next) {
     }
     const { start_date, end_date } = workshop;
 
+    const now = new Date();
+
+    if (start_date <= now) {
+      return res
+        .status(400)
+        .json({ message: "Workshop start date cannot be in the past" });
+    }
+
+    const adjustedStartDate = new Date(start_date);
+    adjustedStartDate.setDate(adjustedStartDate.getDate() - 7);
+
+    if (adjustedStartDate < now) {
+      return res.status(400).json({
+        message:
+          "Trainers must be added at least 7 days before the workshop start date",
+      });
+    }
+
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
       const trainer = await Trainer.findById(trainerId);
       if (!trainer || !trainer.availability) continue;
+      const adjustedStartDate = new Date(start_date);
+      adjustedStartDate.setDate(adjustedStartDate.getDate() - 7);
+      const now = new Date();
+
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
         (timeslot) => {
           return checkTimeslotOverlap(
-            start_date,
+            adjustedStartDate,
             end_date,
             timeslot.start,
             timeslot.end
