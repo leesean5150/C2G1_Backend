@@ -5,6 +5,7 @@ db.clients.insertMany([
     username: "client",
     email: "client@email.com",
     fullname: "Client",
+    client_type: "Technical",
     password: "$2a$10$0I9kCnsc8PKycuImPcEfHO3P5CbSLUjOZVyKFbEoyvq9YnH9SlyRq",
     country: "Singapore",
     role: "client",
@@ -14,6 +15,7 @@ db.clients.insertMany([
     username: "johndoefromjohnbrosinc",
     email: "johndoefromjohnbrosinc@email.com",
     fullname: "johndoefromjohnbrosinc",
+    client_type: "Executive",
     password: "$2a$10$tb.sifvCVRC3yJdRt0TGgeCwT42R9T7AMOuXIvllEXcmr1ZJ../Qi",
     country: "Singapore",
     role: "client",
@@ -116,8 +118,8 @@ const trainer2 = db.trainers.findOne({
   username: "Trainer_3_JohnDoe",
 });
 
-console.log("trainer1:", trainer1);
-console.log("trainer2:", trainer2);
+console.log("trainer1:", trainer1._id);
+console.log("trainer2:", trainer2._id);
 
 //// inserting workshop requests
 db.workshoprequests.insertMany([
