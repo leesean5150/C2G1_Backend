@@ -14,7 +14,7 @@ import { Admin } from "../models/Admin.js";
  */
 async function signup(req, res) {
   try {
-    const { username, email, password, fullname, country } = req.body;
+    const { username, email, password, fullname, country, client_type } = req.body;
     const uniqueUsername = await Client.findOne({ username }).exec();
     const uniqueEmail = await Client.findOne({ email }).exec();
 
@@ -32,6 +32,7 @@ async function signup(req, res) {
       password: hashpassword,
       fullname,
       country,
+      client_type
     });
 
     await newClient.save();
