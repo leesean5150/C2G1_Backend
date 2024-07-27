@@ -1,6 +1,7 @@
 import { WorkshopSummary } from "../../workshop/models/WorkshopSummary.js";
 import { WorkshopRequest } from "../../workshop/models/WorkshopRequest.js";
-import { Workshop } from "../../workshop/models/Workshop.js";
+import { Client } from "../../auth/models/Client.js";
+import { WorkshopData } from "../../workshop/models/WorkshopData.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { get } from "http";
 
@@ -174,6 +175,7 @@ async function getTotalPieChartGraph(req, res, next) {
         } else {
           acc.pending_count = workshop.count;
         }
+        return acc;
       },
       { accepted_count: 0, rejected_count: 0, pending_count: 0 }
     );
@@ -209,6 +211,7 @@ async function getTotalPieChartGraph(req, res, next) {
 
 async function getYearsPieChartGraph(req, res, next) {
   try {
+    console.log("getting years pie chart data");
     const years = [2021, 2022, 2023, 2024, 2025];
     const aggregatePipeline = [
       {
@@ -238,36 +241,64 @@ async function getYearsPieChartGraph(req, res, next) {
       },
     ];
 
+    console.log("aggregatePipeline:", aggregatePipeline);
+
+    const result = await WorkshopRequest.aggregate(aggregatePipeline);
+
     const pieChartData = {};
-    await Promise.all(
-      years.map(async (year) => {
-        const workshops = await WorkshopRequest.find({
-          start_date: {
-            $gte: new Date(year, 0, 1),
-            $lte: new Date(year, 11, 31),
-          },
-        });
-        const { accepted_count, rejected_count, pending_count } =
-          workshops.reduce(
-            (acc, workshop) => {
-              if (workshop.status === "approved") {
-                acc.accepted_count++;
-              } else if (workshop.status === "rejected") {
-                acc.rejected_count++;
-              } else {
-                acc.pending_count++;
-              }
-              return acc;
-            },
-            { accepted_count: 0, rejected_count: 0, pending_count: 0 }
-          );
-        pieChartData[year] = [
-          { name: "Workshops accepted", value: accepted_count },
-          { name: "Workshops rejected", value: rejected_count },
-          { name: "pending", value: pending_count },
-        ];
-      })
-    );
+    result.forEach((yearData) => {
+      const year = yearData._id;
+      const data = yearData.statuses.reduce(
+        (acc, { status, count }) => {
+          if (status === "approved") {
+            acc.accepted_count = count;
+          } else if (status === "rejected") {
+            acc.rejected_count = count;
+          } else {
+            acc.pending_count = count;
+          }
+          return acc;
+        },
+        { accepted_count: 0, rejected_count: 0, pending_count: 0 }
+      );
+
+      pieChartData[year] = [
+        { name: "Workshops accepted", value: data.accepted_count },
+        { name: "Workshops rejected", value: data.rejected_count },
+        { name: "pending", value: data.pending_count },
+      ];
+    });
+
+    // const pieChartData = {};
+    // await Promise.all(
+    //   years.map(async (year) => {
+    //     const workshops = await WorkshopRequest.find({
+    //       start_date: {
+    //         $gte: new Date(year, 0, 1),
+    //         $lte: new Date(year, 11, 31),
+    //       },
+    //     });
+    //     const { accepted_count, rejected_count, pending_count } =
+    //       workshops.reduce(
+    //         (acc, workshop) => {
+    //           if (workshop.status === "approved") {
+    //             acc.accepted_count++;
+    //           } else if (workshop.status === "rejected") {
+    //             acc.rejected_count++;
+    //           } else {
+    //             acc.pending_count++;
+    //           }
+    //           return acc;
+    //         },
+    //         { accepted_count: 0, rejected_count: 0, pending_count: 0 }
+    //       );
+    //     pieChartData[year] = [
+    //       { name: "Workshops accepted", value: accepted_count },
+    //       { name: "Workshops rejected", value: rejected_count },
+    //       { name: "pending", value: pending_count },
+    //     ];
+    //   })
+    // );
 
     return res.status(200).json(pieChartData);
   } catch (error) {
@@ -278,16 +309,64 @@ async function getYearsPieChartGraph(req, res, next) {
   }
 }
 
-async function getWorkshopTypesData(req, res, next) {
+async function getWorkshopTypesGraph(req, res, next) {
   try {
-    // total workshoptypesData
-    const workshopTypesData = [];
-    const workshops = await WorkshopRequest.find();
+    const aggregatePipeline = [
+      {
+        $group: {
+          _id: "$workshop_data",
+          dealsize: { $sum: "$deal_potential" },
+        },
+      },
+    ];
+
+    const workshops = await WorkshopRequest.aggregate(aggregatePipeline);
+
+    const workshopTypePromises = workshops.map(async (workshoptype) => {
+      const name = await WorkshopData.findById(workshoptype._id);
+      return {
+        name: name.workshop_type,
+        dealsize: workshoptype.dealsize,
+      };
+    });
+
+    const resolvedPromises = await Promise.all(workshopTypePromises);
+    return res.status(200).json(resolvedPromises);
   } catch (error) {
     console.log("error getting workshop types data:", error);
     return res
       .status(500)
       .json({ message: "Failed to retrieve workshop types data", error });
+  }
+}
+
+async function getClientTypeGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $group: {
+          _id: "$client_type",
+          dealsize: { $sum: "$deal_potential" },
+        },
+      },
+    ];
+    const clientTypeData = [];
+    const clients = await Client.aggregate(aggregatePipeline);
+
+    clients.forEach((clienttype) => {
+      const entry = {
+        name: clienttype._id,
+        dealsize: clienttype.dealsize,
+      };
+      clientTypeData.push(entry);
+    });
+
+    return res.status(200).json(clientTypeData);
+  } catch (error) {
+    console.log("error getting client types data:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve client types data", error });
   }
 }
 
@@ -297,4 +376,6 @@ export default {
   getTodayGraph: getTodayGraph,
   getTotalPieChartGraph: getTotalPieChartGraph,
   getYearsPieChartGraph: getYearsPieChartGraph,
+  getWorkshopTypesGraph: getWorkshopTypesGraph,
+  getClientTypeGraph: getClientTypeGraph,
 };
