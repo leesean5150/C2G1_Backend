@@ -16,6 +16,7 @@ router.get(
   verifyAdmin,
   WorkshopRequestController.getAllSubmittedWorkshops
 );
+router.get("/getApproved", WorkshopRequestController.getAllApprovedWorkshops);
 router.get("/:id", WorkshopRequestController.getWorkshopRequest);
 router.post("/", WorkshopRequestController.createWorkshopRequest);
 router.patch(
