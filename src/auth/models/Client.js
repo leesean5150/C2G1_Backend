@@ -8,7 +8,7 @@ const clientSchema = new mongoose.Schema({
   password: { type: String, required: true },
   country: { type: String, required: true },
   role: { type: String, default: "client" },
-  client_Type: { type: String, required: true },
+  client_type: { type: String, required: true },
   workshop_request: [
     {
       type: mongoose.Schema.Types.ObjectId,
