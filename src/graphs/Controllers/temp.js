@@ -4,95 +4,6 @@ import { Workshop } from "../../workshop/models/Workshop.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { get } from "http";
 
-async function getWorkshopTrendDataGraph(req, res, next) {
-  try {
-    const aggregatePipeline = [
-      {
-        $addFields: {
-          month: { $month: "$start_date" },
-          year: { $year: "$start_date" },
-        },
-      },
-      {
-        $group: {
-          _id: { month: "$month", year: "$year" },
-          count: { $sum: 1 },
-          dealsize: { $sum: "$deal_potential" },
-        },
-      },
-      {
-        $group: {
-          _id: "$_id.month",
-          monthsData: {
-            $push: {
-              year: "$_id.year",
-              count: "$count",
-              dealsize: "$dealsize",
-            },
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          month: { $arrayElemat: ["$monthsData.year", 0] },
-          data: {
-            $reduce: {
-              input: "$monthsData",
-              initialValue: {},
-              in: {
-                $mergeObjects: [
-                  "$$value",
-                  {
-                    [`workshopRequests${"$$this.year"}`]:
-                      "$$this.workshopRequests",
-                    [`dealSize${"$$this.year"}`]: "$$this.dealSize",
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          month: {
-            $arrayElemat: [
-              [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-              ],
-              { $subtract: ["$_id", 1] },
-            ],
-          },
-        },
-      },
-    ];
-
-    const workshopData = await WorkshopRequest.aggregate(aggregatePipeline);
-
-    return res.status(200).json(workshopData);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "unable to get data" });
-  }
-}
-
 async function getHCtotalPieData(req, res, next) {
   try {
     const data = [
@@ -288,7 +199,6 @@ async function getHCWorkshopTrendData(req, res, next) {
 }
 
 export default {
-  getWorkshopTrendDataGraph: getWorkshopTrendDataGraph,
   getHCtotalPieData: getHCtotalPieData,
   getHCyearsPieData: getHCyearsPieData,
   getHCWorkshopTypesData: getHCWorkshopTypesData,
