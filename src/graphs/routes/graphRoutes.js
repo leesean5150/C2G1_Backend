@@ -11,8 +11,12 @@ router.get("/getYearsPieChartGraph", graphController.getYearsPieChartGraph);
 router.get("/getTotalPieChartGraph", graphController.getTotalPieChartGraph);
 router.get("/getWorkshopTypesGraph", graphController.getWorkshopTypesGraph);
 router.get("/getClientTypeGraph", graphController.getClientTypeGraph);
+router.get(
+  "/getWorkshopTrendDataGraph",
+  graphController.getWorkshopTrendDataGraph
+);
+router.get("/getTrainerUtilGraph", graphController.getTrainerUtilGraph);
 
-router.get("/getWorkshopTrendDataGraph", temp.getWorkshopTrendDataGraph);
 router.get("/getHCtotalPieData", temp.getHCtotalPieData);
 router.get("/getHCyearsPieData", temp.getHCyearsPieData);
 router.get("/getHCWorkshopTypesData", temp.getHCWorkshopTypesData);
