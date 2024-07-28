@@ -1,6 +1,7 @@
 import { WorkshopSummary } from "../../workshop/models/WorkshopSummary.js";
 import { WorkshopRequest } from "../../workshop/models/WorkshopRequest.js";
-import { Workshop } from "../../workshop/models/Workshop.js";
+import { Client } from "../../auth/models/Client.js";
+import { WorkshopData } from "../../workshop/models/WorkshopData.js";
 import { Trainer } from "../../auth/models/Trainer.js";
 import { get } from "http";
 
@@ -174,6 +175,7 @@ async function getTotalPieChartGraph(req, res, next) {
         } else {
           acc.pending_count = workshop.count;
         }
+        return acc;
       },
       { accepted_count: 0, rejected_count: 0, pending_count: 0 }
     );
@@ -209,12 +211,13 @@ async function getTotalPieChartGraph(req, res, next) {
 
 async function getYearsPieChartGraph(req, res, next) {
   try {
-    const years = [2021, 2022, 2023, 2024, 2025];
+    console.log("getting years pie chart data");
+    const years = [2022, 2023, 2024, 2025];
     const aggregatePipeline = [
       {
         $match: {
           start_date: {
-            $gte: new Date(2021, 0, 1),
+            $gte: new Date(2022, 0, 1),
             $lte: new Date(2025, 11, 31),
           },
         },
@@ -238,36 +241,42 @@ async function getYearsPieChartGraph(req, res, next) {
       },
     ];
 
+    console.log("aggregatePipeline:", aggregatePipeline);
+
+    const result = await WorkshopRequest.aggregate(aggregatePipeline);
+
     const pieChartData = {};
-    await Promise.all(
-      years.map(async (year) => {
-        const workshops = await WorkshopRequest.find({
-          start_date: {
-            $gte: new Date(year, 0, 1),
-            $lte: new Date(year, 11, 31),
-          },
-        });
-        const { accepted_count, rejected_count, pending_count } =
-          workshops.reduce(
-            (acc, workshop) => {
-              if (workshop.status === "approved") {
-                acc.accepted_count++;
-              } else if (workshop.status === "rejected") {
-                acc.rejected_count++;
-              } else {
-                acc.pending_count++;
-              }
-              return acc;
-            },
-            { accepted_count: 0, rejected_count: 0, pending_count: 0 }
-          );
-        pieChartData[year] = [
-          { name: "Workshops accepted", value: accepted_count },
-          { name: "Workshops rejected", value: rejected_count },
-          { name: "pending", value: pending_count },
-        ];
-      })
-    );
+
+    years.forEach((year) => {
+      pieChartData[year] = [
+        { name: "Workshops accepted", value: 0 },
+        { name: "Workshops rejected", value: 0 },
+        { name: "pending", value: 0 },
+      ];
+    });
+
+    result.forEach((yearData) => {
+      const year = yearData._id;
+      const data = yearData.statuses.reduce(
+        (acc, { status, count }) => {
+          if (status === "approved") {
+            acc.accepted_count = count;
+          } else if (status === "rejected") {
+            acc.rejected_count = count;
+          } else {
+            acc.pending_count = count;
+          }
+          return acc;
+        },
+        { accepted_count: 0, rejected_count: 0, pending_count: 0 }
+      );
+
+      pieChartData[year] = [
+        { name: "Workshops accepted", value: data.accepted_count },
+        { name: "Workshops rejected", value: data.rejected_count },
+        { name: "pending", value: data.pending_count },
+      ];
+    });
 
     return res.status(200).json(pieChartData);
   } catch (error) {
@@ -278,16 +287,196 @@ async function getYearsPieChartGraph(req, res, next) {
   }
 }
 
-async function getWorkshopTypesData(req, res, next) {
+async function getWorkshopTypesGraph(req, res, next) {
   try {
-    // total workshoptypesData
-    const workshopTypesData = [];
-    const workshops = await WorkshopRequest.find();
+    const aggregatePipeline = [
+      {
+        $group: {
+          _id: "$workshop_data",
+          dealsize: { $sum: "$deal_potential" },
+        },
+      },
+    ];
+
+    const workshops = await WorkshopRequest.aggregate(aggregatePipeline);
+
+    const workshopTypePromises = workshops.map(async (workshoptype) => {
+      const name = await WorkshopData.findById(workshoptype._id);
+      return {
+        name: name.workshop_type,
+        dealSize: workshoptype.dealsize,
+      };
+    });
+
+    const resolvedPromises = await Promise.all(workshopTypePromises);
+    return res.status(200).json(resolvedPromises);
   } catch (error) {
     console.log("error getting workshop types data:", error);
     return res
       .status(500)
       .json({ message: "Failed to retrieve workshop types data", error });
+  }
+}
+
+async function getClientTypeGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $lookup: {
+          from: "clients",
+          localField: "client",
+          foreignField: "_id",
+          as: "clientData",
+        },
+      },
+      { $unwind: "$clientData" },
+      {
+        $group: {
+          _id: "$clientData.client_type",
+          dealSize: { $sum: "$deal_potential" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          dealSize: 1,
+        },
+      },
+    ];
+
+    const clientTypes = await WorkshopRequest.aggregate(aggregatePipeline);
+    console.log(clientTypes);
+    return res.status(200).json(clientTypes);
+  } catch (error) {
+    console.log("error getting client types data:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve client types data", error });
+  }
+}
+
+async function getWorkshopTrendDataGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $addFields: {
+          month: { $month: "$start_date" },
+          year: { $year: "$start_date" },
+        },
+      },
+      {
+        $group: {
+          _id: { month: "$month", year: "$year" },
+          count: { $sum: 1 },
+          dealsize: { $sum: "$deal_potential" },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.month",
+          monthsData: {
+            $push: {
+              year: "$_id.year",
+              count: "$count",
+              dealsize: "$dealsize",
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          monthsData: 1,
+        },
+      },
+      {
+        $addFields: {
+          monthName: {
+            $arrayElemAt: [
+              [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+              ],
+              { $subtract: ["$month", 1] },
+            ],
+          },
+        },
+      },
+    ];
+
+    const workshopData = await WorkshopRequest.aggregate(aggregatePipeline);
+
+    const formattedData = workshopData.map((monthData) => {
+      const result = { month: monthData.monthName };
+
+      monthData.monthsData.forEach((data) => {
+        result[`workshopRequests${data.year}`] = data.count;
+        result[`dealSize${data.year}`] = data.dealsize;
+      });
+      return result;
+    });
+
+    return res.status(200).json(formattedData);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "unable to get data" });
+  }
+}
+
+async function getTrainerUtilGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $lookup: {
+          from: "workshoprequests",
+          localField: "workshop_request",
+          foreignField: "_id",
+          as: "workshopsData",
+        },
+      },
+      {
+        $unwind: "$workshopsData",
+      },
+      {
+        $unwind: "$workshopsData.utilisation",
+      },
+      {
+        $group: {
+          _id: "$_id",
+          totalUtilisationHours: { $sum: "$workshopsData.utilisation.hours" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          trainerID: "$_id",
+          totalUtilisationHours: 1,
+        },
+      },
+    ];
+    const result = await Trainer.aggregate(aggregatePipeline);
+    console.log(`result: ${JSON.stringify(result)}`);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "unable to get data" });
   }
 }
 
@@ -297,4 +486,8 @@ export default {
   getTodayGraph: getTodayGraph,
   getTotalPieChartGraph: getTotalPieChartGraph,
   getYearsPieChartGraph: getYearsPieChartGraph,
+  getWorkshopTypesGraph: getWorkshopTypesGraph,
+  getClientTypeGraph: getClientTypeGraph,
+  getWorkshopTrendDataGraph: getWorkshopTrendDataGraph,
+  getTrainerUtilGraph: getTrainerUtilGraph,
 };
