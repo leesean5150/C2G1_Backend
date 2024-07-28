@@ -95,6 +95,7 @@ db.workshopdatas.insertMany([
 const clientJohnDoe = db.clients.findOne({
   username: "johndoefromjohnbrosinc",
 });
+const clientClient = db.clients.findOne({ username: "client" });
 
 const workshopData1 = db.workshopdatas.findOne({
   workshop_name: "Intro to Python",
@@ -296,7 +297,7 @@ db.workshoprequests.insertMany([
     ],
     workshop_data: workshopData2._id,
     trainers: [trainer2._id],
-    client: clientJohnDoe._id,
+    client: clientClient._id,
   },
   {
     company_role: "Marketing Head",
@@ -321,7 +322,7 @@ db.workshoprequests.insertMany([
     ],
     workshop_data: workshopData3._id,
     trainers: [trainer1._id],
-    client: clientJohnDoe._id,
+    client: clientClient._id,
   },
   {
     company_role: "Sales Manager",
@@ -346,6 +347,6 @@ db.workshoprequests.insertMany([
     ],
     workshop_data: workshopData2._id,
     trainers: [trainer1._id],
-    client: clientJohnDoe._id,
+    client: clientClient._id,
   },
 ]);
