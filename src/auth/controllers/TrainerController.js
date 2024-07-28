@@ -45,6 +45,27 @@ async function getTeammates(req, res, next) {
   }
 }
 
+async function getOthers(req, res, next) {
+  try {
+    const trainerList = await Trainer.find({ role: "trainer" })
+      .populate({
+        path: "workshop_request",
+        populate: {
+          path: "trainers",
+        },
+      })
+      .exec();
+    if (!trainerList) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Trainer not found" });
+    }
+    return res.status(200).json(trainerList);
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+}
+
 async function updateUtilisation(req, res) {
   try {
     const workshop_request = await WorkshopRequest.findById(req.params.id);
@@ -75,4 +96,9 @@ async function updateUtilisation(req, res) {
   }
 }
 
-export default { getAllocatedWorkshops, getTeammates, updateUtilisation };
+export default {
+  getAllocatedWorkshops,
+  getTeammates,
+  getOthers,
+  updateUtilisation,
+};

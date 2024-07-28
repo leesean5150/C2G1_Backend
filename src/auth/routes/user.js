@@ -67,6 +67,8 @@ router.get(
 
 router.get("/getteammates", verifyTrainer, TrainerController.getTeammates);
 
+router.get("/getothers", verifyTrainer, TrainerController.getOthers);
+
 router.patch(
   "/updateutilisation/:id",
   verifyTrainer,
