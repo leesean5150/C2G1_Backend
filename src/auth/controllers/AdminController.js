@@ -30,17 +30,24 @@ async function getAllTrainers(req, res) {
 async function getAllAvailableTrainers(req, res) {
   const { startTime, endTime } = req.query;
   try {
+    const start = new Date(startTime) - 7 * 24 * 60 * 60 * 1000;
+    const end = new Date(endTime);
+
     const trainers = await Trainer.find({
       availability: "Active",
       unavailableTimeslots: {
         $not: {
           $elemMatch: {
-            start: { $lte: new Date(endTime) },
-            end: { $gte: new Date(startTime) },
+            $or: [
+              { start: { $lt: end, $gte: start } }, // Starts within the range
+              { end: { $gt: start, $lte: end } }, // Ends within the range
+              { start: { $lte: start }, end: { $gte: end } }, // Encompasses the range
+            ],
           },
         },
       },
     }).exec();
+
     return res.status(200).json(trainers);
   } catch (e) {
     console.log(e);
