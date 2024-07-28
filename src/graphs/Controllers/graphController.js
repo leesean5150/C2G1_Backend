@@ -212,12 +212,12 @@ async function getTotalPieChartGraph(req, res, next) {
 async function getYearsPieChartGraph(req, res, next) {
   try {
     console.log("getting years pie chart data");
-    const years = [2021, 2022, 2023, 2024, 2025];
+    const years = [2022, 2023, 2024, 2025];
     const aggregatePipeline = [
       {
         $match: {
           start_date: {
-            $gte: new Date(2021, 0, 1),
+            $gte: new Date(2022, 0, 1),
             $lte: new Date(2025, 11, 31),
           },
         },
@@ -246,6 +246,15 @@ async function getYearsPieChartGraph(req, res, next) {
     const result = await WorkshopRequest.aggregate(aggregatePipeline);
 
     const pieChartData = {};
+
+    years.forEach((year) => {
+      pieChartData[year] = [
+        { name: "Workshops accepted", value: 0 },
+        { name: "Workshops rejected", value: 0 },
+        { name: "pending", value: 0 },
+      ];
+    });
+
     result.forEach((yearData) => {
       const year = yearData._id;
       const data = yearData.statuses.reduce(
@@ -268,37 +277,6 @@ async function getYearsPieChartGraph(req, res, next) {
         { name: "pending", value: data.pending_count },
       ];
     });
-
-    // const pieChartData = {};
-    // await Promise.all(
-    //   years.map(async (year) => {
-    //     const workshops = await WorkshopRequest.find({
-    //       start_date: {
-    //         $gte: new Date(year, 0, 1),
-    //         $lte: new Date(year, 11, 31),
-    //       },
-    //     });
-    //     const { accepted_count, rejected_count, pending_count } =
-    //       workshops.reduce(
-    //         (acc, workshop) => {
-    //           if (workshop.status === "approved") {
-    //             acc.accepted_count++;
-    //           } else if (workshop.status === "rejected") {
-    //             acc.rejected_count++;
-    //           } else {
-    //             acc.pending_count++;
-    //           }
-    //           return acc;
-    //         },
-    //         { accepted_count: 0, rejected_count: 0, pending_count: 0 }
-    //       );
-    //     pieChartData[year] = [
-    //       { name: "Workshops accepted", value: accepted_count },
-    //       { name: "Workshops rejected", value: rejected_count },
-    //       { name: "pending", value: pending_count },
-    //     ];
-    //   })
-    // );
 
     return res.status(200).json(pieChartData);
   } catch (error) {
@@ -326,7 +304,7 @@ async function getWorkshopTypesGraph(req, res, next) {
       const name = await WorkshopData.findById(workshoptype._id);
       return {
         name: name.workshop_type,
-        dealsize: workshoptype.dealsize,
+        dealSize: workshoptype.dealsize,
       };
     });
 
@@ -344,29 +322,161 @@ async function getClientTypeGraph(req, res, next) {
   try {
     const aggregatePipeline = [
       {
+        $lookup: {
+          from: "clients",
+          localField: "client",
+          foreignField: "_id",
+          as: "clientData",
+        },
+      },
+      { $unwind: "$clientData" },
+      {
         $group: {
-          _id: "$client_type",
-          dealsize: { $sum: "$deal_potential" },
+          _id: "$clientData.client_type",
+          dealSize: { $sum: "$deal_potential" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          dealSize: 1,
         },
       },
     ];
-    const clientTypeData = [];
-    const clients = await Client.aggregate(aggregatePipeline);
 
-    clients.forEach((clienttype) => {
-      const entry = {
-        name: clienttype._id,
-        dealsize: clienttype.dealsize,
-      };
-      clientTypeData.push(entry);
-    });
-
-    return res.status(200).json(clientTypeData);
+    const clientTypes = await WorkshopRequest.aggregate(aggregatePipeline);
+    console.log(clientTypes);
+    return res.status(200).json(clientTypes);
   } catch (error) {
     console.log("error getting client types data:", error);
     return res
       .status(500)
       .json({ message: "Failed to retrieve client types data", error });
+  }
+}
+
+async function getWorkshopTrendDataGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $addFields: {
+          month: { $month: "$start_date" },
+          year: { $year: "$start_date" },
+        },
+      },
+      {
+        $group: {
+          _id: { month: "$month", year: "$year" },
+          count: { $sum: 1 },
+          dealsize: { $sum: "$deal_potential" },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.month",
+          monthsData: {
+            $push: {
+              year: "$_id.year",
+              count: "$count",
+              dealsize: "$dealsize",
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          monthsData: 1,
+        },
+      },
+      {
+        $addFields: {
+          monthName: {
+            $arrayElemAt: [
+              [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+              ],
+              { $subtract: ["$month", 1] },
+            ],
+          },
+        },
+      },
+    ];
+
+    const workshopData = await WorkshopRequest.aggregate(aggregatePipeline);
+
+    const formattedData = workshopData.map((monthData) => {
+      const result = { month: monthData.monthName };
+
+      monthData.monthsData.forEach((data) => {
+        result[`workshopRequests${data.year}`] = data.count;
+        result[`dealSize${data.year}`] = data.dealsize;
+      });
+      return result;
+    });
+
+    return res.status(200).json(formattedData);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "unable to get data" });
+  }
+}
+
+async function getTrainerUtilGraph(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $lookup: {
+          from: "workshoprequests",
+          localField: "workshop_request",
+          foreignField: "_id",
+          as: "workshopsData",
+        },
+      },
+      {
+        $unwind: "$workshopsData",
+      },
+      {
+        $unwind: "$workshopsData.utilisation",
+      },
+      {
+        $group: {
+          _id: "$_id",
+          totalUtilisationHours: { $sum: "$workshopsData.utilisation.hours" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          trainerID: "$_id",
+          totalUtilisationHours: 1,
+        },
+      },
+    ];
+    const result = await Trainer.aggregate(aggregatePipeline);
+    console.log(`result: ${JSON.stringify(result)}`);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "unable to get data" });
   }
 }
 
@@ -378,4 +488,6 @@ export default {
   getYearsPieChartGraph: getYearsPieChartGraph,
   getWorkshopTypesGraph: getWorkshopTypesGraph,
   getClientTypeGraph: getClientTypeGraph,
+  getWorkshopTrendDataGraph: getWorkshopTrendDataGraph,
+  getTrainerUtilGraph: getTrainerUtilGraph,
 };
