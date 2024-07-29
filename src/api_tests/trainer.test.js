@@ -1,7 +1,8 @@
 import supertest from "supertest";
 import initializeApp from "../app";
 import mongoose from "mongoose";
-import { Trainer } from "../auth/models/Trainer"; // Import the Trainer model
+import { Trainer } from "../auth/models/Trainer";
+import { WorkshopRequest } from "../workshop/models/WorkshopRequest";
 
 describe("Testing Trainer Endpoints", () => {
   let app;
@@ -20,6 +21,15 @@ describe("Testing Trainer Endpoints", () => {
     tokenValue = tokenCookie.split("=")[1].split(";")[0];
   });
 
+  beforeEach(async () => {
+    await WorkshopRequest.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+  });
+
+  // trainer login tests
   test("testing invalid login", async () => {
     const response = await supertest(app).post("/auth/login/trainer").send({
       username: "invalidusername",
@@ -81,6 +91,7 @@ describe("Testing Trainer Endpoints", () => {
     expect(response.body.message).toBe("Logged out");
   });
 
+  // getteammates tests
   test("should return 404 if trainer not found", async () => {
     jest.spyOn(Trainer, "findById").mockReturnValue({
       populate: jest.fn().mockReturnValue({
@@ -90,8 +101,6 @@ describe("Testing Trainer Endpoints", () => {
     const response = await supertest(app)
       .get("/auth/getteammates")
       .set("Cookie", `token=${tokenValue}`);
-
-    console.log(response.body); // Add logging to see the response body
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
@@ -120,8 +129,6 @@ describe("Testing Trainer Endpoints", () => {
       .get("/auth/getteammates")
       .set("Cookie", `token=${tokenValue}`);
 
-    console.log(response.body); // Add logging to see the response body
-
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       trainer_workshops: mockTrainer.workshop_request,
@@ -137,8 +144,6 @@ describe("Testing Trainer Endpoints", () => {
       .get("/auth/getteammates")
       .set("Cookie", `token=${tokenValue}`);
 
-    console.log(response.body); // Add logging to see the response body
-
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
       status: false,
@@ -146,7 +151,72 @@ describe("Testing Trainer Endpoints", () => {
     });
   });
 
-  afterAll(async () => {
-    await mongoose.disconnect();
+  // getOthers tests
+  test("should return 404 if no trainers found", async () => {
+    jest.spyOn(Trainer, "find").mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      }),
+    });
+    const response = await supertest(app)
+      .get("/auth/getothers")
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({
+      status: false,
+      message: "Trainer not found",
+    });
+
+    jest.clearAllMocks();
+  });
+
+  test("should return 200 with empty list if trainers exist but no workshop requests", async () => {
+    jest.spyOn(Trainer, "find").mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue([{ workshopRequests: [] }]), // Return trainers with no workshop requests
+      }),
+    });
+
+    const response = await supertest(app)
+      .get("/auth/getothers")
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ workshopRequests: [] }]);
+
+    jest.clearAllMocks();
+  });
+
+  test("should return 200 with trainers and their workshop requests", async () => {
+    jest.spyOn(Trainer, "find").mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue([
+          {
+            username: "trainer1",
+            workshop_request: [
+              {
+                workshop_ID: "ID1",
+              },
+            ],
+          },
+        ]),
+      }),
+    });
+    const response = await supertest(app)
+      .get("/auth/getothers")
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          username: "trainer1",
+          workshop_request: expect.arrayContaining([
+            expect.objectContaining({
+              workshop_ID: "ID1",
+            }),
+          ]),
+        }),
+      ])
+    );
+    jest.clearAllMocks();
   });
 });
