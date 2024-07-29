@@ -3,7 +3,7 @@ import initializeApp from "../app";
 import mongoose from "mongoose";
 import { Trainer } from "../auth/models/Trainer";
 import { WorkshopRequest } from "../workshop/models/WorkshopRequest";
-import { Client } from "../client/models/Client";
+import { Client } from "../auth/models/Client";
 
 describe("Testing Trainer Endpoints", () => {
   let app;
@@ -22,8 +22,8 @@ describe("Testing Trainer Endpoints", () => {
     );
     tokenValue = tokenCookie.split("=")[1].split(";")[0];
 
-    //find clientid from db
     const client = await Client.findOne({});
+    console.log(client);
 
     const workshopRequest = new WorkshopRequest({
       company_role: "Clerk",
@@ -42,15 +42,13 @@ describe("Testing Trainer Endpoints", () => {
       client_id: client._id,
     });
     await workshopRequest.save();
-    workshopRequestId = workshopRequest._id;
+    workshopRequestId = workshopRequest._id.toString();
+    console.log(workshopRequestId);
   });
 
-  beforeEach(async () => {
-    await WorkshopRequest.deleteMany({});
-  });
+  beforeEach(async () => {});
 
   afterAll(async () => {
-    // await WorkshopRequest.deleteMany({});
     await mongoose.disconnect();
   });
 
@@ -246,4 +244,48 @@ describe("Testing Trainer Endpoints", () => {
   });
 
   // updateUtilisation tests
+  test("should update utilisation successfully", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/updateutilisation/${workshopRequestId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send([{ date: "2023-10-01", hours: 5 }]);
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(true);
+    expect(response.body.message).toBe("Utilisation updated successfully");
+  });
+
+  test("should return 404 if WorkshopRequest not found", async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const response = await supertest(app)
+      .patch(`/auth/updateutilisation/${nonExistentId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send([{ date: "2023-10-01", hours: 5 }]);
+    console.log(response.body);
+    expect(response.status).toBe(404);
+    expect(response.body.status).toBe(false);
+    expect(response.body.message).toBe("WorkshopRequest not found");
+  });
+
+  test("should return 400 for invalid ID format", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/updateutilisation/invalidId`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send([{ date: "2023-10-01", hours: 5 }]);
+
+    expect(response.status).toBe(400);
+    expect(response.body.status).toBe(false);
+    expect(response.body.message).toBe("Invalid ID format");
+  });
+
+  test("should return 400 for invalid utilisation data", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/updateutilisation/${workshopRequestId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send({ date: "2023-10-01", hours: 5 });
+
+    expect(response.status).toBe(400);
+    expect(response.body.status).toBe(false);
+    expect(response.body.message).toBe("Invalid utilisation data");
+  });
 });
