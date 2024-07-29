@@ -49,6 +49,22 @@ async function getAllApprovedWorkshops(req, res, next) {
   }
 }
 
+async function getNonSubmittedWorkshops(req, res, next) {
+  try {
+    const workshops = await WorkshopRequest.find({
+      status: { $ne: "submitted" },
+    })
+      .sort({ createdAt: -1 })
+      .populate("workshop_data");
+    return res.status(200).json(workshops);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: "Failed to retrieve workshops", error });
+  }
+}
+
 async function getWorkshopRequest(req, res, next) {
   try {
     const { id } = req.params;
@@ -256,8 +272,6 @@ async function addTrainers(req, res, next) {
       return res.status(404).json({ message: "Workshop not found" });
     }
 
-    console.log("BEFORE UPDATING TRAINER");
-
     await Promise.all(
       activeTrainers.map((trainerId) =>
         Trainer.findByIdAndUpdate(
@@ -267,8 +281,6 @@ async function addTrainers(req, res, next) {
         )
       )
     );
-
-    console.log("AFTER UPDATING TRAINER");
 
     await updateMultipleTrainersUnavailableTimeslots(req, res, next);
 
@@ -393,6 +405,7 @@ export default {
   getAllWorkshopRequests,
   getAllSubmittedWorkshops,
   getAllApprovedWorkshops,
+  getNonSubmittedWorkshops,
   getWorkshopRequest,
   createWorkshopRequest,
   updatedWorkshopRequest,
