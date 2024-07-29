@@ -30,8 +30,22 @@ async function getAllTrainers(req, res) {
 async function getAllAvailableTrainers(req, res) {
   const { startTime, endTime } = req.query;
   try {
-    const start = new Date(startTime) - 7 * 24 * 60 * 60 * 1000;
+    // Parse and validate date inputs
+    const start = new Date(startTime);
     const end = new Date(endTime);
+    const currentDate = new Date();
+
+    if (isNaN(start) || isNaN(end)) {
+      return res.status(400).json({ message: "Invalid date format. Please use YYYY-MM-DD." });
+    }
+
+    if (start <= currentDate) {
+      return res.status(200).json([]);
+    }
+
+    // Calculate 7 days after the start date
+    const sevenDaysAfterStart = new Date(start);
+    sevenDaysAfterStart.setDate(start.getDate() + 7);
 
     const trainers = await Trainer.find({
       availability: "Active",
@@ -39,9 +53,9 @@ async function getAllAvailableTrainers(req, res) {
         $not: {
           $elemMatch: {
             $or: [
-              { start: { $lt: end, $gte: start } }, // Starts within the range
-              { end: { $gt: start, $lte: end } }, // Ends within the range
-              { start: { $lte: start }, end: { $gte: end } }, // Encompasses the range
+              { start: { $gte: sevenDaysAfterStart, $lt: end } }, 
+              { end: { $gt: sevenDaysAfterStart, $lte: end } }, 
+              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } }, 
             ],
           },
         },
