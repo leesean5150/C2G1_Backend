@@ -1,5 +1,6 @@
 import { Trainer } from "../models/Trainer.js";
 import { WorkshopRequest } from "../../workshop/models/WorkshopRequest.js";
+import mongoose from "mongoose";
 
 async function getAllocatedWorkshops(req, res) {
   try {
@@ -68,7 +69,17 @@ async function getOthers(req, res, next) {
 
 async function updateUtilisation(req, res) {
   try {
-    const workshop_request = await WorkshopRequest.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate the ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid ID format",
+      });
+    }
+
+    const workshop_request = await WorkshopRequest.findById(id);
 
     if (!workshop_request) {
       return res
