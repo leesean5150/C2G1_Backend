@@ -3,10 +3,12 @@ import initializeApp from "../app";
 import mongoose from "mongoose";
 import { Trainer } from "../auth/models/Trainer";
 import { WorkshopRequest } from "../workshop/models/WorkshopRequest";
+import { Client } from "../client/models/Client";
 
 describe("Testing Trainer Endpoints", () => {
   let app;
   let tokenValue;
+  let workshopRequestId;
 
   beforeAll(async () => {
     app = await initializeApp();
@@ -19,6 +21,28 @@ describe("Testing Trainer Endpoints", () => {
       cookie.startsWith("token=")
     );
     tokenValue = tokenCookie.split("=")[1].split(";")[0];
+
+    //find clientid from db
+    const client = await Client.findOne({});
+
+    const workshopRequest = new WorkshopRequest({
+      company_role: "Clerk",
+      company: "sutd",
+      name: "sean",
+      email: "sdf",
+      phone_number: 345,
+      pax: 345,
+      deal_potential: 345,
+      country: "sfadg",
+      venue: "asdfgfsd",
+      start_date: "07/25/2024",
+      end_date: "07/26/2024",
+      request_message: "sdf",
+      workshop_data_id: "02",
+      client_id: client._id,
+    });
+    await workshopRequest.save();
+    workshopRequestId = workshopRequest._id;
   });
 
   beforeEach(async () => {
@@ -26,6 +50,7 @@ describe("Testing Trainer Endpoints", () => {
   });
 
   afterAll(async () => {
+    // await WorkshopRequest.deleteMany({});
     await mongoose.disconnect();
   });
 
@@ -219,4 +244,6 @@ describe("Testing Trainer Endpoints", () => {
     );
     jest.clearAllMocks();
   });
+
+  // updateUtilisation tests
 });
