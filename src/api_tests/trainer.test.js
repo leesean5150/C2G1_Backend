@@ -8,42 +8,74 @@ import { Client } from "../auth/models/Client";
 describe("Testing Trainer Endpoints", () => {
   let app;
   let tokenValue;
+  let tokenValue_trainer;
   let workshopRequestId;
 
   beforeAll(async () => {
-    app = await initializeApp();
+    try {
+      app = await initializeApp();
 
-    const response_login = await supertest(app).post("/auth/login/admin").send({
-      username: process.env.SUPERUSER_USERNAME,
-      password: process.env.SUPERUSER_PASSWORD,
-    });
-    const tokenCookie = response_login.headers["set-cookie"].find((cookie) =>
-      cookie.startsWith("token=")
-    );
-    tokenValue = tokenCookie.split("=")[1].split(";")[0];
+      const login = async (url, credentials) => {
+        const response = await supertest(app).post(url).send(credentials);
+        if (!response.headers["set-cookie"]) {
+          throw new Error(`${url} login failed: Set-Cookie header not found`);
+        }
+        return response;
+      };
 
-    const client = await Client.findOne({});
-    console.log(client);
+      const response_login = await login("/auth/login/admin", {
+        username: process.env.SUPERUSER_USERNAME,
+        password: process.env.SUPERUSER_PASSWORD,
+      });
 
-    const workshopRequest = new WorkshopRequest({
-      company_role: "Clerk",
-      company: "sutd",
-      name: "sean",
-      email: "sdf",
-      phone_number: 345,
-      pax: 345,
-      deal_potential: 345,
-      country: "sfadg",
-      venue: "asdfgfsd",
-      start_date: "07/25/2024",
-      end_date: "07/26/2024",
-      request_message: "sdf",
-      workshop_data_id: "02",
-      client_id: client._id,
-    });
-    await workshopRequest.save();
-    workshopRequestId = workshopRequest._id.toString();
-    console.log(workshopRequestId);
+      const tokenCookie = response_login.headers["set-cookie"].find((cookie) =>
+        cookie.startsWith("token=")
+      );
+      if (!tokenCookie) {
+        throw new Error("Admin login failed: Token cookie not found");
+      }
+      tokenValue = tokenCookie.split("=")[1].split(";")[0];
+
+      const response_login_trainer = await login("/auth/login/trainer", {
+        username: "trainer",
+        password: "trainer",
+      });
+
+      const tokenCookie_trainer = response_login_trainer.headers[
+        "set-cookie"
+      ].find((cookie) => cookie.startsWith("token="));
+      if (!tokenCookie_trainer) {
+        throw new Error("Trainer login failed: Token cookie not found");
+      }
+      tokenValue_trainer = tokenCookie_trainer.split("=")[1].split(";")[0];
+
+      const client = await Client.findOne({});
+      if (!client) {
+        throw new Error("Client not found");
+      }
+
+      const workshopRequest = new WorkshopRequest({
+        company_role: "Clerk",
+        company: "sutd",
+        name: "sean",
+        email: "sdf",
+        phone_number: 345,
+        pax: 345,
+        deal_potential: 345,
+        country: "sfadg",
+        venue: "asdfgfsd",
+        start_date: "07/25/2024",
+        end_date: "07/26/2024",
+        request_message: "sdf",
+        workshop_data_id: "02",
+        client_id: client._id,
+      });
+      await workshopRequest.save();
+      workshopRequestId = workshopRequest._id.toString();
+    } catch (error) {
+      console.error("Error in beforeAll setup:", error);
+      throw error; // Rethrow to fail the tests if setup fails
+    }
   });
 
   beforeEach(async () => {});
@@ -64,8 +96,8 @@ describe("Testing Trainer Endpoints", () => {
 
   test("testing login with trainer account", async () => {
     const response = await supertest(app).post("/auth/login/trainer").send({
-      username: "trainer1",
-      password: "trainer1",
+      username: "trainer",
+      password: "trainer",
     });
     const tokenCookie = response.headers["set-cookie"].find((cookie) =>
       cookie.startsWith("token=")
@@ -214,7 +246,7 @@ describe("Testing Trainer Endpoints", () => {
       populate: jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue([
           {
-            username: "trainer1",
+            username: "trainer",
             workshop_request: [
               {
                 workshop_ID: "ID1",
@@ -231,7 +263,7 @@ describe("Testing Trainer Endpoints", () => {
     expect(response.body).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          username: "trainer1",
+          username: "trainer",
           workshop_request: expect.arrayContaining([
             expect.objectContaining({
               workshop_ID: "ID1",
@@ -261,7 +293,6 @@ describe("Testing Trainer Endpoints", () => {
       .patch(`/auth/updateutilisation/${nonExistentId}`)
       .set("Cookie", `token=${tokenValue}`)
       .send([{ date: "2023-10-01", hours: 5 }]);
-    console.log(response.body);
     expect(response.status).toBe(404);
     expect(response.body.status).toBe(false);
     expect(response.body.message).toBe("WorkshopRequest not found");
@@ -287,5 +318,68 @@ describe("Testing Trainer Endpoints", () => {
     expect(response.status).toBe(400);
     expect(response.body.status).toBe(false);
     expect(response.body.message).toBe("Invalid utilisation data");
+  });
+
+  // getAllocatedWorkshops tests
+  test("should return 200 and trainer's workshop requests", async () => {
+    const mockTrainer = {
+      _id: new mongoose.Types.ObjectId(),
+      workshop_request: [
+        {
+          _id: new mongoose.Types.ObjectId().toString(),
+          workshop_data: { name: "Workshop 1" },
+        },
+      ],
+    };
+
+    const findByIdMock = jest.spyOn(Trainer, "findById").mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockTrainer),
+      }),
+    });
+
+    const response = await supertest(app)
+      .get("/auth/allocatedworkshops")
+      .set("Cookie", `token=${tokenValue_trainer}`);
+
+    console.log("Mock called:", findByIdMock.mock.calls.length > 0); // Check if mock was called
+    console.log("Response body:", response.body); // Log the response body
+
+    expect(response.status).toBe(200);
+    expect(response.body.trainer_workshops).toEqual(
+      mockTrainer.workshop_request
+    );
+  });
+
+  test("should return 404 if trainer not found", async () => {
+    jest.spyOn(Trainer, "findById").mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      }),
+    });
+
+    const response = await supertest(app)
+      .get("/auth/allocatedworkshops")
+      .set("Cookie", `token=${tokenValue_trainer}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.status).toBe(false);
+    expect(response.body.message).toBe("Trainer not found");
+  });
+
+  test("should return 500 if there is a server error", async () => {
+    jest.spyOn(Trainer, "findById").mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        exec: jest.fn().mockRejectedValue(new Error("Server error")),
+      }),
+    });
+
+    const response = await supertest(app)
+      .get("/auth/allocatedworkshops")
+      .set("Cookie", `token=${tokenValue_trainer}`);
+
+    expect(response.status).toBe(500);
+    expect(response.body.status).toBe(false);
+    expect(response.body.message).toBe("Server error");
   });
 });
