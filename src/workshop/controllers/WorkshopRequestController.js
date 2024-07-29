@@ -40,7 +40,9 @@ async function getAllApprovedWorkshops(req, res, next) {
     const data = [];
     const aggregatePipeline = [{ $match: { status: "approved" } }];
 
-    const workshops = await WorkshopRequest.aggregate(aggregatePipeline);
+    const workshops = await WorkshopRequest.aggregate(
+      aggregatePipeline
+    );
     data.push(workshops);
     return res.status(200).json(data);
   } catch (error) {
@@ -55,6 +57,7 @@ async function getNonSubmittedWorkshops(req, res, next) {
       status: { $ne: "submitted" },
     })
       .sort({ createdAt: -1 })
+      .populate("trainers")
       .populate("workshop_data");
     return res.status(200).json(workshops);
   } catch (error) {
@@ -283,8 +286,6 @@ async function addTrainers(req, res, next) {
     );
 
     await updateMultipleTrainersUnavailableTimeslots(req, res, next);
-
-    //return res.status(200).json();
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to add trainers", error });
