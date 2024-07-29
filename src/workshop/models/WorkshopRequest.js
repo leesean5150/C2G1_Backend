@@ -1,8 +1,12 @@
 import mongoose from "mongoose";
+import { Counter } from "./Counter.js";
 const Schema = mongoose.Schema;
 
 const workshopRequestSchema = new Schema(
   {
+    request_id: {
+      type: String,
+    },
     company_role: {
       type: String,
     },
@@ -89,6 +93,18 @@ const workshopRequestSchema = new Schema(
     timestamps: true,
   }
 );
+
+workshopRequestSchema.pre('save', async function (next) {
+  if (this.isNew) {
+    const counter = await Counter.findOneAndUpdate(
+      { _id: 'workshop_request_id' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    this.request_id = `WR${counter.seq.toString().padStart(4, '0')}`;
+  }
+  next(); 
+});
 
 const WorkshopRequestModel = mongoose.model(
   "WorkshopRequest",
