@@ -4,7 +4,6 @@ import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/up
 import { WorkshopData } from "../models/WorkshopData.js";
 import { WorkshopRequest } from "../models/WorkshopRequest.js";
 import { checkTimeslotOverlap } from "../../utils/dateUtils.js";
-import { now } from "mongoose";
 
 async function getAllWorkshopRequests(req, res, next) {
     try {
@@ -55,7 +54,7 @@ async function getNonSubmittedWorkshops(req, res, next) {
         const workshops = await WorkshopRequest.find({
                 status: { $ne: "submitted" },
             })
-            .sort({ createdAt: -1 })
+            .sort({ updatedAt: -1 })
             .populate("trainers")
             .populate("workshop_data");
         return res.status(200).json(workshops);
