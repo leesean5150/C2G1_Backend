@@ -440,4 +440,43 @@ describe("Testing Admin Functionality", () => {
   });
 
   // delete all trainers tests
+  test("Delete all trainers when trainers exist", async () => {
+    // Create multiple trainers
+    await Trainer.create([
+      {
+        username: "trainer10",
+        email: "trainer10@example.com",
+        password: "password1",
+        fullname: "Trainer Onety",
+        trainer_role: "role1",
+      },
+      {
+        username: "trainer20",
+        email: "trainer20@example.com",
+        password: "password2",
+        fullname: "Trainer Twoty",
+        trainer_role: "role2",
+      },
+    ]);
+
+    const response = await supertest(app)
+      .delete("/auth/delete-all-trainers")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(true);
+    expect(response.body.message).toBe("All trainers deleted successfully");
+
+    const trainers = await Trainer.find({});
+    expect(trainers.length).toBe(0);
+  });
+
+  test("Delete all trainers when no trainers exist", async () => {
+    const response = await supertest(app)
+      .delete("/auth/delete-all-trainers")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("No trainers found to delete");
+  });
 });
