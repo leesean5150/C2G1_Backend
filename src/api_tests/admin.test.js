@@ -333,6 +333,51 @@ describe("Testing Admin Functionality", () => {
   });
 
   // delete trainer account tests
+  test("Delete trainer successfully", async () => {
+    // Create a trainer first
+    const trainerData = {
+      username: "deletetrainer",
+      email: "deletetrainer@example.com",
+      password: "password123",
+      fullname: "Delete Trainer",
+      trainer_role: "role",
+    };
+    const hashpassword = await bcrypt.hash(trainerData.password, 10);
+    const trainer = new Trainer({
+      ...trainerData,
+      password: hashpassword,
+    });
+    const savedTrainer = await trainer.save();
+
+    // Delete the trainer
+    const response = await supertest(app)
+      .delete(`/auth/trainers/delete/${savedTrainer._id}`)
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(true);
+    expect(response.body.message).toBe("Trainer deleted successfully");
+  });
+
+  test("Delete non-existent trainer", async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const response = await supertest(app)
+      .delete(`/auth/trainers/delete/${nonExistentId}`)
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Trainer not found");
+  });
+
+  test("Delete trainer with invalid ID", async () => {
+    const invalidId = "12345";
+    const response = await supertest(app)
+      .delete(`/auth/trainers/delete/${invalidId}`)
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid id");
+  });
 
   // update trainer account tests
 
