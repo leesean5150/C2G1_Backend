@@ -37,8 +37,8 @@ describe("Testing Trainer Endpoints", () => {
       tokenValue = tokenCookie.split("=")[1].split(";")[0];
 
       const response_login_trainer = await login("/auth/login/trainer", {
-        username: "trainer",
-        password: "trainer",
+        username: "trainer1",
+        password: "trainer1",
       });
 
       const tokenCookie_trainer = response_login_trainer.headers[
@@ -96,8 +96,8 @@ describe("Testing Trainer Endpoints", () => {
 
   test("testing login with trainer account", async () => {
     const response = await supertest(app).post("/auth/login/trainer").send({
-      username: "trainer",
-      password: "trainer",
+      username: "trainer1",
+      password: "trainer1",
     });
     const tokenCookie = response.headers["set-cookie"].find((cookie) =>
       cookie.startsWith("token=")

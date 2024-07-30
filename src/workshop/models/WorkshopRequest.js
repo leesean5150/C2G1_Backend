@@ -23,7 +23,7 @@ const workshopRequestSchema = new Schema(
       type: Number,
     },
     pax: {
-      type: Number,
+      type: String,
       required: true,
     },
     deal_potential: {

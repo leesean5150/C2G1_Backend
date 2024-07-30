@@ -97,6 +97,20 @@ describe("WorkshopData CRUD operations", () => {
         expect(response.body.workshop_details).toBe("This is an updated test workshop");
     });
 
+    test("should return a certain WorkshopData entity", async() => {
+        const workshopDataId = workshopDataIds[0];
+        const response = await supertest(app)
+            .get(`/workshopdata/${workshopDataId}`)
+            .set('Cookie', `token=${tokenValue}`);
+
+        expect(response.status).toBe(200);
+
+        const workshopData = response.body;
+
+        expect(workshopData).toHaveProperty("_id", workshopDataId);
+        expect(workshopData.workshop_name).toBe("Updated Workshop");
+    });
+
     test("should delete a WorkshopData entity", async() => {
         const workshopDataId = workshopDataIds[0];
         const response = await supertest(app)
@@ -104,5 +118,14 @@ describe("WorkshopData CRUD operations", () => {
             .set('Cookie', `token=${tokenValue}`);
 
         expect(response.status).toBe(200);
+    });
+
+    test("should get 2 available WorkshopData entities", async() => {
+        const response = await supertest(app)
+            .get(`/workshopdata/available`)
+            .set('Cookie', `token=${tokenValue}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.length).toBe(2);
     });
 });

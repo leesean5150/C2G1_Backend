@@ -4,8 +4,6 @@ import { updateMultipleTrainersUnavailableTimeslots } from "../../middlewares/up
 import { WorkshopData } from "../models/WorkshopData.js";
 import { WorkshopRequest } from "../models/WorkshopRequest.js";
 import { checkTimeslotOverlap } from "../../utils/dateUtils.js";
-import { now } from "mongoose";
-import path from "path";
 
 async function getAllWorkshopRequests(req, res, next) {
   try {
@@ -38,6 +36,7 @@ async function getAllSubmittedWorkshops(req, res, next) {
 
 async function getAllApprovedWorkshops(req, res) {
   try {
+
     const data = [];
     const aggregatePipeline = [
       { $match: { status: "approved" } },
@@ -236,34 +235,14 @@ async function addTrainers(req, res, next) {
     }
     const { start_date, end_date } = workshop;
 
-    const now = new Date();
-
-    if (start_date <= now) {
-      return res
-        .status(400)
-        .json({ message: "Workshop start date cannot be in the past" });
-    }
-
-    const adjustedStartDate = new Date(start_date);
-    adjustedStartDate.setDate(adjustedStartDate.getDate() - 7);
-
-    if (adjustedStartDate < now) {
-      return res.status(400).json({
-        message:
-          "Trainers must be added at least 7 days before the workshop start date",
-      });
-    }
-
     const activeTrainers = [];
     for (const trainerId of trainerIds) {
       const trainer = await Trainer.findById(trainerId);
       if (!trainer || !trainer.availability) continue;
-      const adjustedStartDate = new Date(start_date);
-      adjustedStartDate.setDate(adjustedStartDate.getDate() - 7);
       const isTrainerUnavailable = trainer.unavailableTimeslots.some(
         (timeslot) => {
           return checkTimeslotOverlap(
-            adjustedStartDate,
+            start_date,
             end_date,
             timeslot.start,
             timeslot.end
@@ -374,12 +353,12 @@ async function deleteWorkshopRequest(req, res, next) {
     );
     await workshopRequest.deleteOne();
     /*
-        const requestIndex = workshop.workshop_request.indexOf(id);
-        if (requestIndex === -1) {
-            throw new Error(`Request with ID ${id} not found in the workshop.`);
-        }
-        workshop.workshop_request.splice(requestIndex, 1);
-        */
+            const requestIndex = workshop.workshop_request.indexOf(id);
+            if (requestIndex === -1) {
+                throw new Error(`Request with ID ${id} not found in the workshop.`);
+            }
+            workshop.workshop_request.splice(requestIndex, 1);
+            */
     await workshop.save();
     const client = await Client.findById(workshopRequest.client._id);
     const clientRequestIndex = client.workshop_request.indexOf(id);

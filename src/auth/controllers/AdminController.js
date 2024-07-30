@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 import { Admin } from "../models/Admin.js";
 import { Trainer } from "../models/Trainer.js";
@@ -17,7 +18,7 @@ async function getAllTrainers(req, res) {
   } catch (e) {
     console.log(e);
     return res.status(500).json({
-      message: e,
+      message: e.message,
     });
   }
 }
@@ -36,16 +37,14 @@ async function getAllAvailableTrainers(req, res) {
     const currentDate = new Date();
 
     if (isNaN(start) || isNaN(end)) {
-      return res.status(400).json({ message: "Invalid date format. Please use YYYY-MM-DD." });
+      return res
+        .status(400)
+        .json({ message: "Invalid date format. Please use YYYY-MM-DD." });
     }
 
     if (start <= currentDate) {
       return res.status(200).json([]);
     }
-
-    // Calculate 7 days after the start date
-    const sevenDaysAfterStart = new Date(start);
-    sevenDaysAfterStart.setDate(start.getDate() + 7);
 
     const trainers = await Trainer.find({
       availability: "Active",
@@ -53,14 +52,14 @@ async function getAllAvailableTrainers(req, res) {
         $not: {
           $elemMatch: {
             $or: [
-              { start: { $gte: sevenDaysAfterStart, $lt: end } }, 
-              { end: { $gt: sevenDaysAfterStart, $lte: end } }, 
-              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } }, 
+              { start: { $gte: start, $lt: end } },
+              { end: { $gt: start, $lte: end } },
+              { start: { $lte: start }, end: { $gte: end } },
             ],
           },
         },
       },
-    }).exec();
+    });
 
     return res.status(200).json(trainers);
   } catch (e) {
@@ -133,6 +132,11 @@ async function adminActivateTrainer(req, res) {
 async function adminDeactivateTrainer(req, res) {
   try {
     const { id } = req.params;
+
+    //validater id as mongoose id
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
     const trainer = await Trainer.findOne({ _id: id }).exec();
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
@@ -174,6 +178,9 @@ async function deleteAllTrainers(req, res) {
 async function adminDeleteTrainer(req, res) {
   try {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
     const trainer = await Trainer.findOneAndDelete({ _id: id }).exec();
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
@@ -182,7 +189,7 @@ async function adminDeleteTrainer(req, res) {
   } catch (e) {
     console.log(e);
     return res.status(500).json({
-      message: e,
+      message: e.message,
     });
   }
 }
@@ -190,6 +197,11 @@ async function adminDeleteTrainer(req, res) {
 async function adminUpdateTrainer(req, res) {
   try {
     const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
+
     const {
       username,
       email,
@@ -265,12 +277,13 @@ async function adminUpdateTrainer(req, res) {
 }
 
 export default {
-  getAllTrainers,
-  adminActivateTrainer,
-  adminUpdateTrainer,
-  adminDeactivateTrainer,
   adminCreateTrainer,
+  adminActivateTrainer,
+  adminDeactivateTrainer,
+  getAllTrainers,
   getAllAvailableTrainers,
   adminDeleteTrainer,
+
+  adminUpdateTrainer,
   deleteAllTrainers,
 };

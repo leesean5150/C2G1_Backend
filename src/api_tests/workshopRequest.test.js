@@ -5,7 +5,6 @@ import { WorkshopRequest } from "../workshop/models/WorkshopRequest";
 import { WorkshopData } from "../workshop/models/WorkshopData";
 import { CLIENT_RENEG_WINDOW } from "tls";
 import { resolve } from "path";
-import exp from "constants";
 
 describe("WorkshopData CRUD operations", () => {
   let app;
@@ -159,6 +158,17 @@ describe("WorkshopData CRUD operations", () => {
 
     workshopRequestId = response.body.workshopRequest._id;
   });
+  test("should return a certain workshoprequest entity", async () => {
+    const response = await supertest(app)
+      .get(`/workshoprequest/${workshopRequestId}`)
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+
+    const workshopRequest = response.body;
+    expect(workshopRequest).toHaveProperty("request_message", "Test message");
+    expect(workshopRequest).toHaveProperty("_id", workshopRequestId);
+  });
 
   test("should return list including one entity", async () => {
     const response = await supertest(app)
@@ -176,7 +186,7 @@ describe("WorkshopData CRUD operations", () => {
     expect(workshopRequest).toHaveProperty("name", "John Doe");
     expect(workshopRequest).toHaveProperty("email", "john.doe@example.com");
     expect(workshopRequest).toHaveProperty("phone_number", 1234567890);
-    expect(workshopRequest).toHaveProperty("pax", 10);
+    expect(workshopRequest).toHaveProperty("pax", "10");
     expect(workshopRequest).toHaveProperty("deal_potential", 1000);
     expect(workshopRequest).toHaveProperty("country", "Singapore");
     expect(workshopRequest).toHaveProperty("venue", "Test Venue");
@@ -209,7 +219,7 @@ describe("WorkshopData CRUD operations", () => {
     expect(workshopRequest).toHaveProperty("name", "John Doe");
     expect(workshopRequest).toHaveProperty("email", "john.doe@example.com");
     expect(workshopRequest).toHaveProperty("phone_number", 1234567890);
-    expect(workshopRequest).toHaveProperty("pax", 10);
+    expect(workshopRequest).toHaveProperty("pax", "10");
     expect(workshopRequest).toHaveProperty("deal_potential", 1000);
     expect(workshopRequest).toHaveProperty("country", "Singapore");
     expect(workshopRequest).toHaveProperty("venue", "Test Venue");
@@ -245,6 +255,18 @@ describe("WorkshopData CRUD operations", () => {
     console.log("Approved WorkshopRequest ID:", workshopRequestId); // Log the ID
   });
 
+  test("should return list including single approved workshopRequest entity", async () => {
+    const response = await supertest(app)
+      .get(`/workshoprequest/getApproved`)
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+
+    expect(response.body.length).toBe(1);
+    const workshopRequest = response.body[0];
+    expect(workshopRequest).toHaveProperty("status", "approved");
+  });
+
   test("should reject the WorkshopRequest", async () => {
     const response = await supertest(app)
       .patch(`/workshoprequest/reject/${workshopRequestId}`)
@@ -258,7 +280,6 @@ describe("WorkshopData CRUD operations", () => {
     expect(response.body).toHaveProperty("reject_reason", "Not enough budget");
   });
 
-  //Our Update function has a problem!!!!!!!! T.T
   test("should update the WorkshopRequest", async () => {
     const response = await supertest(app)
       .patch(`/workshoprequest/${workshopRequestId}`)
@@ -290,7 +311,7 @@ describe("WorkshopData CRUD operations", () => {
       "jane.doe@example.com"
     );
     expect(updatedWorkshopRequest).toHaveProperty("phone_number", 9876543210);
-    expect(updatedWorkshopRequest).toHaveProperty("pax", 20);
+    expect(updatedWorkshopRequest).toHaveProperty("pax", "20");
     expect(updatedWorkshopRequest).toHaveProperty("deal_potential", 2000);
     expect(updatedWorkshopRequest).toHaveProperty("country", "Malaysia");
     expect(updatedWorkshopRequest).toHaveProperty("venue", "Updated Venue");
