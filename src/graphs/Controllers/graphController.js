@@ -180,21 +180,6 @@ async function getTotalPieChartGraph(req, res, next) {
       { accepted_count: 0, rejected_count: 0, pending_count: 0 }
     );
 
-    // const workshops = await WorkshopRequest.find();
-    // const { accepted_count, rejected_count, pending_count } = workshops.reduce(
-    //   (acc, workshop) => {
-    //     if (workshop.status === "approved") {
-    //       acc.accepted_count++;
-    //     } else if (workshop.status === "rejected") {
-    //       acc.rejected_count++;
-    //     } else {
-    //       acc.pending_count++;
-    //     }
-    //     return acc;
-    //   },
-    //   { accepted_count: 0, rejected_count: 0, pending_count: 0 }
-    // );
-
     const pieChartData = [
       { name: "Workshops accepted", value: statCounter.accepted_count },
       { name: "Workshops rejected", value: statCounter.rejected_count },
@@ -211,7 +196,6 @@ async function getTotalPieChartGraph(req, res, next) {
 
 async function getYearsPieChartGraph(req, res, next) {
   try {
-    console.log("getting years pie chart data");
     const years = [2022, 2023, 2024, 2025];
     const aggregatePipeline = [
       {
@@ -240,8 +224,6 @@ async function getYearsPieChartGraph(req, res, next) {
         },
       },
     ];
-
-    console.log("aggregatePipeline:", aggregatePipeline);
 
     const result = await WorkshopRequest.aggregate(aggregatePipeline);
 
@@ -346,7 +328,7 @@ async function getClientTypeGraph(req, res, next) {
     ];
 
     const clientTypes = await WorkshopRequest.aggregate(aggregatePipeline);
-    console.log(clientTypes);
+    console.log(`clientTypes: ${JSON.stringify(clientTypes)}`);
     return res.status(200).json(clientTypes);
   } catch (error) {
     console.log("error getting client types data:", error);
@@ -517,10 +499,15 @@ async function getTrainerUtilGraph(req, res, next) {
           ongoing_workshops: 1,
         },
       },
+      {
+        $sort: {
+          name: 1,
+        },
+      },
     ];
 
     const result = await WorkshopRequest.aggregate(aggregatePipeline);
-    console.log(`result: ${JSON.stringify(result)}`);
+
     return res.status(200).json(result);
   } catch (error) {
     console.log(error);
