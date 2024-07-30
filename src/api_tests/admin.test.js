@@ -218,45 +218,34 @@ describe("Testing Admin Functionality", () => {
   });
 
   // get all trainers tests
+  test("should return all trainers", async () => {
+    const response = await supertest(app)
+      .get("/auth/trainers/list")
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    response.body.forEach((trainer) => {
+      expect(trainer).toHaveProperty("username");
+      expect(trainer).toHaveProperty("email");
+      expect(trainer).toHaveProperty("fullname");
+      expect(trainer).toHaveProperty("trainer_role");
+    });
+  });
 
-  // // get all available trainers tests
-  // test("Get available trainers with valid date range", async () => {
-  //   const response = await supertest(app)
-  //     .get("/auth/trainers/available")
-  //     .query({ startTime: "2023-10-15", endTime: "2023-10-20" })
-  //     .set("Cookie", `token=${tokenValue}`);
-  //   expect(response.status).toBe(200);
-  //   expect(response.body.length).toBe(2);
-  // });
+  test("should handle errors when database query fails", async () => {
+    // Mock the Trainer.find method to throw an error
+    jest.spyOn(Trainer, "find").mockImplementationOnce(() => {
+      throw new Error("Database query failed");
+    });
 
-  // test("Get available trainers with no trainers available", async () => {
-  //   const response = await supertest(app)
-  //     .get("/auth/trainers/available")
-  //     .query({ startTime: "2023-10-10", endTime: "2023-10-12" })
-  //     .set("Cookie", `token=${tokenValue}`);
-  //   expect(response.status).toBe(200);
-  //   expect(response.body.length).toBe(1);
-  // });
+    const response = await supertest(app)
+      .get("/auth/trainers/list")
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(500);
+    expect(response.body.message).toBe("Database query failed");
+  });
 
-  // test("Get available trainers with invalid date format", async () => {
-  //   const response = await supertest(app)
-  //     .get("/auth/trainers/available")
-  //     .query({ startTime: "invalid-date", endTime: "2023-10-20" })
-  //     .set("Cookie", `token=${tokenValue}`);
-  //   expect(response.status).toBe(400);
-  //   expect(response.body.message).toBe(
-  //     "Invalid date format. Please use YYYY-MM-DD."
-  //   );
-  // });
-
-  // test("Get available trainers with start date in the past", async () => {
-  //   const response = await supertest(app)
-  //     .get("/auth/trainers/available")
-  //     .query({ startTime: "2022-10-10", endTime: "2022-10-20" })
-  //     .set("Cookie", `token=${tokenValue}`);
-  //   expect(response.status).toBe(200);
-  //   expect(response.body.length).toBe(0);
-  // });
+  // get all available trainers tests
 
   // delete trainer account tests
 
