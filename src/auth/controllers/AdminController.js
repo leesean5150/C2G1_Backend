@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 import { Admin } from "../models/Admin.js";
 import { Trainer } from "../models/Trainer.js";
@@ -17,7 +18,7 @@ async function getAllTrainers(req, res) {
   } catch (e) {
     console.log(e);
     return res.status(500).json({
-      message: e,
+      message: e.message,
     });
   }
 }
@@ -58,7 +59,7 @@ async function getAllAvailableTrainers(req, res) {
           },
         },
       },
-    }).exec();
+    });
 
     return res.status(200).json(trainers);
   } catch (e) {
@@ -177,6 +178,9 @@ async function deleteAllTrainers(req, res) {
 async function adminDeleteTrainer(req, res) {
   try {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
     const trainer = await Trainer.findOneAndDelete({ _id: id }).exec();
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
@@ -185,7 +189,7 @@ async function adminDeleteTrainer(req, res) {
   } catch (e) {
     console.log(e);
     return res.status(500).json({
-      message: e,
+      message: e.message,
     });
   }
 }
@@ -193,6 +197,11 @@ async function adminDeleteTrainer(req, res) {
 async function adminUpdateTrainer(req, res) {
   try {
     const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
+
     const {
       username,
       email,
