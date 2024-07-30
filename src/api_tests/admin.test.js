@@ -21,8 +21,8 @@ describe("Testing Admin Functionality", () => {
     };
 
     const response_login = await login("/auth/login/admin", {
-      username: process.env.SUPERUSER_USERNAME,
-      password: process.env.SUPERUSER_PASSWORD,
+      username: "admin",
+      password: "admin",
     });
 
     const tokenCookie = response_login.headers["set-cookie"].find((cookie) =>
@@ -246,6 +246,91 @@ describe("Testing Admin Functionality", () => {
   });
 
   // get all available trainers tests
+  test("should return 400 for invalid date format", async () => {
+    const response = await supertest(app)
+      .get("/auth/trainers/available")
+      .set("Cookie", `token=${tokenValue}`)
+      .query({ startTime: "invalid-date", endTime: "invalid-date" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe(
+      "Invalid date format. Please use YYYY-MM-DD."
+    );
+  });
+
+  test("should return 200 with empty array for start date in the past", async () => {
+    const pastDate = new Date(Date.now() - 86400000)
+      .toISOString()
+      .split("T")[0]; // Yesterday's date
+    const futureDate = new Date(Date.now() + 86400000)
+      .toISOString()
+      .split("T")[0]; // Tomorrow's date
+
+    const response = await supertest(app)
+      .get("/auth/trainers/available")
+      .set("Cookie", `token=${tokenValue}`)
+      .query({ startTime: pastDate, endTime: futureDate });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+
+  test("should return 200 with empty array for start date equal to current date", async () => {
+    const currentDate = new Date().toISOString().split("T")[0]; // Today's date
+    const futureDate = new Date(Date.now() + 86400000)
+      .toISOString()
+      .split("T")[0]; // Tomorrow's date
+
+    const response = await supertest(app)
+      .get("/auth/trainers/available")
+      .set("Cookie", `token=${tokenValue}`)
+      .query({ startTime: currentDate, endTime: futureDate });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+
+  test("should return 200 with empty array for valid date range with no trainers available", async () => {
+    jest.spyOn(Trainer, "find").mockResolvedValueOnce([]);
+
+    const futureDate1 = new Date(Date.now() + 86400000)
+      .toISOString()
+      .split("T")[0]; // Tomorrow's date
+    const futureDate2 = new Date(Date.now() + 172800000)
+      .toISOString()
+      .split("T")[0]; // Day after tomorrow's date
+
+    const response = await supertest(app)
+      .get("/auth/trainers/available")
+      .set("Cookie", `token=${tokenValue}`)
+      .query({ startTime: futureDate1, endTime: futureDate2 });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+
+  test("should return 200 with trainers for valid date range with trainers available", async () => {
+    const mockTrainers = [
+      { name: "Trainer 1", availability: "Active", unavailableTimeslots: [] },
+      { name: "Trainer 2", availability: "Active", unavailableTimeslots: [] },
+    ];
+    jest.spyOn(Trainer, "find").mockResolvedValueOnce(mockTrainers);
+
+    const futureDate1 = new Date(Date.now() + 86400000)
+      .toISOString()
+      .split("T")[0]; // Tomorrow's date
+    const futureDate2 = new Date(Date.now() + 172800000)
+      .toISOString()
+      .split("T")[0]; // Day after tomorrow's date
+
+    const response = await supertest(app)
+      .get("/auth/trainers/available")
+      .set("Cookie", `token=${tokenValue}`)
+      .query({ startTime: futureDate1, endTime: futureDate2 });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(mockTrainers);
+  });
 
   // delete trainer account tests
 

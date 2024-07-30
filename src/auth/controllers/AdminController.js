@@ -58,7 +58,7 @@ async function getAllAvailableTrainers(req, res) {
           },
         },
       },
-    }).exec();
+    });
 
     return res.status(200).json(trainers);
   } catch (e) {
