@@ -480,6 +480,45 @@ async function getTrainerUtilGraph(req, res, next) {
   }
 }
 
+async function getTrainerUtilGraph2(req, res, next) {
+  try {
+    const aggregatePipeline = [
+      {
+        $lookup: {
+          from: "trainers",
+          localField: "trainers",
+          foreignField: "_id",
+          as: "trainerData",
+        },
+      },
+      {
+        $unwind: "$trainerData",
+      },
+      {
+        $group: {
+          _id: "$trainerData._id",
+          totalUtilisationHours: { $sum: "$utilisation.hours" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$trainerData.fullname",
+          totalUtilisationHours: 1,
+          workshops_completed_total: "$trainerData.workshops_completed_total",
+          ongoing_workshops: "$trainerData.ongoing_workshops",
+        },
+      },
+    ];
+    const result = await WorkshopRequest.aggregate(aggregatePipeline);
+    console.log(`result: ${JSON.stringify(result)}`);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "unable to get data" });
+  }
+}
+
 export default {
   getWorkshopSummaryGraph: getWorkshopSummaryGraph,
   getTrainerGraph: getTrainerGraph,
@@ -490,4 +529,5 @@ export default {
   getClientTypeGraph: getClientTypeGraph,
   getWorkshopTrendDataGraph: getWorkshopTrendDataGraph,
   getTrainerUtilGraph: getTrainerUtilGraph,
+  getTrainerUtilGraph2: getTrainerUtilGraph2,
 };
