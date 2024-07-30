@@ -16,7 +16,6 @@ router.get(
   graphController.getWorkshopTrendDataGraph
 );
 router.get("/getTrainerUtilGraph", graphController.getTrainerUtilGraph);
-router.get("/getTrainerUtilGraph2", graphController.getTrainerUtilGraph2);
 
 router.get("/getHCtotalPieData", temp.getHCtotalPieData);
 router.get("/getHCyearsPieData", temp.getHCyearsPieData);

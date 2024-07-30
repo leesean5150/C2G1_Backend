@@ -440,47 +440,47 @@ async function getWorkshopTrendDataGraph(req, res, next) {
   }
 }
 
-async function getTrainerUtilGraph(req, res, next) {
-  try {
-    const aggregatePipeline = [
-      {
-        $lookup: {
-          from: "workshoprequests",
-          localField: "workshop_request",
-          foreignField: "_id",
-          as: "workshopsData",
-        },
-      },
-      {
-        $unwind: "$workshopsData",
-      },
-      {
-        $unwind: "$workshopsData.utilisation",
-      },
-      {
-        $group: {
-          _id: "$_id",
-          totalUtilisationHours: { $sum: "$workshopsData.utilisation.hours" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          trainerID: "$_id",
-          totalUtilisationHours: 1,
-        },
-      },
-    ];
-    const result = await Trainer.aggregate(aggregatePipeline);
-    console.log(`result: ${JSON.stringify(result)}`);
-    return res.status(200).json(result);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "unable to get data" });
-  }
-}
+// async function getTrainerUtilGraph(req, res, next) {
+//   try {
+//     const aggregatePipeline = [
+//       {
+//         $lookup: {
+//           from: "workshoprequests",
+//           localField: "workshop_request",
+//           foreignField: "_id",
+//           as: "workshopsData",
+//         },
+//       },
+//       {
+//         $unwind: "$workshopsData",
+//       },
+//       {
+//         $unwind: "$workshopsData.utilisation",
+//       },
+//       {
+//         $group: {
+//           _id: "$_id",
+//           totalUtilisationHours: { $sum: "$workshopsData.utilisation.hours" },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           trainerID: "$_id",
+//           totalUtilisationHours: 1,
+//         },
+//       },
+//     ];
+//     const result = await Trainer.aggregate(aggregatePipeline);
+//     console.log(`result: ${JSON.stringify(result)}`);
+//     return res.status(200).json(result);
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({ message: "unable to get data" });
+//   }
+// }
 
-async function getTrainerUtilGraph2(req, res, next) {
+async function getTrainerUtilGraph(req, res, next) {
   try {
     const aggregatePipeline = [
       {
@@ -495,21 +495,30 @@ async function getTrainerUtilGraph2(req, res, next) {
         $unwind: "$trainerData",
       },
       {
+        $unwind: "$utilisation",
+      },
+      {
         $group: {
           _id: "$trainerData._id",
-          totalUtilisationHours: { $sum: "$utilisation.hours" },
+          total_trainer_utilization: { $sum: "$utilisation.hours" },
+          name: { $first: "$trainerData.fullname" },
+          workshops_completed_total: {
+            $first: "$trainerData.workshops_completed_total",
+          },
+          ongoing_workshops: { $first: "$trainerData.ongoing_workshops" },
         },
       },
       {
         $project: {
           _id: 0,
-          name: "$trainerData.fullname",
-          totalUtilisationHours: 1,
-          workshops_completed_total: "$trainerData.workshops_completed_total",
-          ongoing_workshops: "$trainerData.ongoing_workshops",
+          name: 1,
+          total_trainer_utilization: 1,
+          workshops_completed_total: 1,
+          ongoing_workshops: 1,
         },
       },
     ];
+
     const result = await WorkshopRequest.aggregate(aggregatePipeline);
     console.log(`result: ${JSON.stringify(result)}`);
     return res.status(200).json(result);
@@ -529,5 +538,4 @@ export default {
   getClientTypeGraph: getClientTypeGraph,
   getWorkshopTrendDataGraph: getWorkshopTrendDataGraph,
   getTrainerUtilGraph: getTrainerUtilGraph,
-  getTrainerUtilGraph2: getTrainerUtilGraph2,
 };
