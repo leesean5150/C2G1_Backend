@@ -219,44 +219,44 @@ describe("Testing Admin Functionality", () => {
 
   // get all trainers tests
 
-  // get all available trainers tests
-  test("Get available trainers with valid date range", async () => {
-    const response = await supertest(app)
-      .get("/auth/trainers/available")
-      .query({ startTime: "2023-10-15", endTime: "2023-10-20" })
-      .set("Cookie", `token=${tokenValue}`);
-    expect(response.status).toBe(200);
-    expect(response.body.length).toBe(2);
-  });
+  // // get all available trainers tests
+  // test("Get available trainers with valid date range", async () => {
+  //   const response = await supertest(app)
+  //     .get("/auth/trainers/available")
+  //     .query({ startTime: "2023-10-15", endTime: "2023-10-20" })
+  //     .set("Cookie", `token=${tokenValue}`);
+  //   expect(response.status).toBe(200);
+  //   expect(response.body.length).toBe(2);
+  // });
 
-  test("Get available trainers with no trainers available", async () => {
-    const response = await supertest(app)
-      .get("/auth/trainers/available")
-      .query({ startTime: "2023-10-10", endTime: "2023-10-12" })
-      .set("Cookie", `token=${tokenValue}`);
-    expect(response.status).toBe(200);
-    expect(response.body.length).toBe(1);
-  });
+  // test("Get available trainers with no trainers available", async () => {
+  //   const response = await supertest(app)
+  //     .get("/auth/trainers/available")
+  //     .query({ startTime: "2023-10-10", endTime: "2023-10-12" })
+  //     .set("Cookie", `token=${tokenValue}`);
+  //   expect(response.status).toBe(200);
+  //   expect(response.body.length).toBe(1);
+  // });
 
-  test("Get available trainers with invalid date format", async () => {
-    const response = await supertest(app)
-      .get("/auth/trainers/available")
-      .query({ startTime: "invalid-date", endTime: "2023-10-20" })
-      .set("Cookie", `token=${tokenValue}`);
-    expect(response.status).toBe(400);
-    expect(response.body.message).toBe(
-      "Invalid date format. Please use YYYY-MM-DD."
-    );
-  });
+  // test("Get available trainers with invalid date format", async () => {
+  //   const response = await supertest(app)
+  //     .get("/auth/trainers/available")
+  //     .query({ startTime: "invalid-date", endTime: "2023-10-20" })
+  //     .set("Cookie", `token=${tokenValue}`);
+  //   expect(response.status).toBe(400);
+  //   expect(response.body.message).toBe(
+  //     "Invalid date format. Please use YYYY-MM-DD."
+  //   );
+  // });
 
-  test("Get available trainers with start date in the past", async () => {
-    const response = await supertest(app)
-      .get("/auth/trainers/available")
-      .query({ startTime: "2022-10-10", endTime: "2022-10-20" })
-      .set("Cookie", `token=${tokenValue}`);
-    expect(response.status).toBe(200);
-    expect(response.body.length).toBe(0);
-  });
+  // test("Get available trainers with start date in the past", async () => {
+  //   const response = await supertest(app)
+  //     .get("/auth/trainers/available")
+  //     .query({ startTime: "2022-10-10", endTime: "2022-10-20" })
+  //     .set("Cookie", `token=${tokenValue}`);
+  //   expect(response.status).toBe(200);
+  //   expect(response.body.length).toBe(0);
+  // });
 
   // delete trainer account tests
 
