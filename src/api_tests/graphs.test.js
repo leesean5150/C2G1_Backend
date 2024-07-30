@@ -2,6 +2,8 @@ import supertest from "supertest";
 import initializeApp from "../app";
 import mongoose from "mongoose";
 import { WorkshopSummary } from "../workshop/models/WorkshopSummary";
+import { WorkshopRequest } from "../workshop/models/WorkshopRequest";
+import { exec } from "child_process";
 
 describe("Testing Graph Functionality", () => {
   let app;
@@ -76,6 +78,8 @@ describe("Testing Graph Functionality", () => {
         email: "client@gmail.com",
         country: "Singapore",
         fullname: "Client",
+        client_type: "Executive",
+        workshop_request: [],
       });
       expect(response.headers["content-type"]).toEqual(
         expect.stringContaining("json")
@@ -97,6 +101,13 @@ describe("Testing Graph Functionality", () => {
           email: "trainer1@gmail.com",
           fullname: "Trainer One",
           trainer_role: "role1",
+          workshops_completed_this_month: 0,
+          experience: 0,
+          gender: "male",
+          ongoing_workshops: 0,
+          workshops_completed_total: 0,
+          workshop_request: [],
+          unavailableTimeslots: [],
         });
 
       const trainerResponse2 = await supertest(app)
@@ -108,6 +119,13 @@ describe("Testing Graph Functionality", () => {
           email: "trainer2@gmail.com",
           fullname: "Trainer Two",
           trainer_role: "role2",
+          workshops_completed_this_month: 1,
+          experience: 0,
+          gender: "male",
+          ongoing_workshops: 0,
+          workshops_completed_total: 0,
+          workshop_request: [],
+          unavailableTimeslots: [],
         });
 
       expect(trainerResponse1.status).toBe(200);
@@ -296,5 +314,131 @@ describe("Testing Graph Functionality", () => {
 
     const summaries = await WorkshopSummary.find();
     expect(summaries.length).toBe(59);
+  });
+
+  test("the type of data and length of data for getTotalPieChartGraph", async () => {
+    const response = await supertest(app)
+      .get("/graph/getTotalPieChartGraph")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body.length).toBe(3);
+
+    const expectedNames = [
+      "Workshops accepted",
+      "Workshops rejected",
+      "pending",
+    ];
+    response.body.forEach((item, index) => {
+      expect(item).toHaveProperty("name");
+      expect(item).toHaveProperty("value");
+      expect(item.name).toBe(expectedNames[index]);
+      expect(typeof item.value).toBe("number");
+    });
+    expect(response.body[0].value).toBe(1);
+  });
+
+  test("the type of data and length of data for getYearsPieChartGraph", async () => {
+    const response = await supertest(app)
+      .get("/graph/getYearsPieChartGraph")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+    expect(Object.keys(response.body).length).toBe(4); // There are 4 years (2022, 2023, 2024, 2025)
+
+    const expectedYears = [2022, 2023, 2024, 2025];
+
+    expectedYears.forEach((year) => {
+      expect(response.body).toHaveProperty(year.toString());
+      expect(response.body[year.toString()]).toBeInstanceOf(Array);
+      expect(response.body[year.toString()].length).toBe(3);
+
+      const expectedNames = [
+        "Workshops accepted",
+        "Workshops rejected",
+        "pending",
+      ];
+
+      response.body[year.toString()].forEach((item, index) => {
+        expect(item).toHaveProperty("name");
+        expect(item).toHaveProperty("value");
+        expect(item.name).toBe(expectedNames[index]);
+        expect(typeof item.value).toBe("number");
+      });
+    });
+
+    expect(response.body["2024"][0].value).toBe(1);
+  });
+
+  test("the type of data and length of data for getWorkshopTypesGraph", async () => {
+    const response = await supertest(app)
+      .get("/graph/getWorkshopTypesGraph")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body.length).toBe(1);
+
+    expect(response.body[0]).toHaveProperty("name");
+    expect(response.body[0]).toHaveProperty("dealSize");
+    expect(response.body[0].name).toBe("Type 1");
+    expect(typeof response.body[0].dealSize).toBe("number");
+    expect(response.body[0].dealSize).toBe(1000);
+  });
+
+  test("the type of data and length of data for getClientTypeGraph", async () => {
+    const response = await supertest(app)
+      .get("/graph/getClientTypeGraph")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body.length).toBe(1);
+
+    expect(response.body[0]).toHaveProperty("name");
+    expect(response.body[0]).toHaveProperty("dealSize");
+    expect(response.body[0].name).toBe("Executive");
+    expect(typeof response.body[0].dealSize).toBe("number");
+    expect(response.body[0].dealSize).toBe(1000);
+  });
+
+  test("the type of data and length of data for getWorkshopTrendDataGraph", async () => {
+    const response = await supertest(app)
+      .get("/graph/getWorkshopTrendDataGraph")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body.length).toBe(1);
+
+    expect(response.body[0]).toHaveProperty("month");
+    expect(response.body[0]).toHaveProperty("workshopRequests2024");
+    expect(response.body[0].month).toBe("Aug");
+    expect(response.body[0].workshopRequests2024).toBe(1);
+    expect(response.body[0].dealSize2024).toBe(1000);
+  });
+
+  test("the type of data and length of data for getTrainerUtilGraph", async () => {
+    const response = await supertest(app)
+      .get("/graph/getTrainerUtilGraph")
+      .set("Cookie", `token=${tokenValue}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body.length).toBe(2);
+
+    const expectedNames = ["Trainer One", "Trainer Two"];
+    response.body.forEach((item, index) => {
+      expect(item).toHaveProperty("name");
+      expect(item).toHaveProperty("ongoing_workshops");
+      expect(item).toHaveProperty("total_trainer_utilization");
+      expect(item).toHaveProperty("workshops_completed_total");
+      expect(item.name).toBe(expectedNames[index]);
+      expect(typeof item.workshops_completed_total).toBe("number");
+      expect(typeof item.ongoing_workshops).toBe("number");
+      expect(typeof item.total_trainer_utilization).toBe("number");
+    });
   });
 });

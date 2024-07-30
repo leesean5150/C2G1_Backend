@@ -34,13 +34,33 @@ async function getAllSubmittedWorkshops(req, res, next) {
   }
 }
 
-async function getAllApprovedWorkshops(req, res, next) {
+async function getAllApprovedWorkshops(req, res) {
   try {
-    const aggregatePipeline = [{ $match: { status: "approved" } }];
+
+    const data = [];
+    const aggregatePipeline = [
+      { $match: { status: "approved" } },
+      {
+        $lookup: {
+          from: "workshopdatas",
+          localField: "workshop_data",
+          foreignField: "_id",
+          as: "workshop_data_details",
+        },
+      },
+      {
+        $unwind: {
+          path: "$workshop_data_details",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ];
 
     const workshops = await WorkshopRequest.aggregate(aggregatePipeline);
 
-    return res.status(200).json(workshops);
+    data.push(workshops);
+    console.log(`data:`, data);
+    return res.status(200).json(data);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error });

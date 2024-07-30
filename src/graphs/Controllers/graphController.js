@@ -180,21 +180,6 @@ async function getTotalPieChartGraph(req, res, next) {
       { accepted_count: 0, rejected_count: 0, pending_count: 0 }
     );
 
-    // const workshops = await WorkshopRequest.find();
-    // const { accepted_count, rejected_count, pending_count } = workshops.reduce(
-    //   (acc, workshop) => {
-    //     if (workshop.status === "approved") {
-    //       acc.accepted_count++;
-    //     } else if (workshop.status === "rejected") {
-    //       acc.rejected_count++;
-    //     } else {
-    //       acc.pending_count++;
-    //     }
-    //     return acc;
-    //   },
-    //   { accepted_count: 0, rejected_count: 0, pending_count: 0 }
-    // );
-
     const pieChartData = [
       { name: "Workshops accepted", value: statCounter.accepted_count },
       { name: "Workshops rejected", value: statCounter.rejected_count },
@@ -211,7 +196,6 @@ async function getTotalPieChartGraph(req, res, next) {
 
 async function getYearsPieChartGraph(req, res, next) {
   try {
-    console.log("getting years pie chart data");
     const years = [2022, 2023, 2024, 2025];
     const aggregatePipeline = [
       {
@@ -240,8 +224,6 @@ async function getYearsPieChartGraph(req, res, next) {
         },
       },
     ];
-
-    console.log("aggregatePipeline:", aggregatePipeline);
 
     const result = await WorkshopRequest.aggregate(aggregatePipeline);
 
@@ -346,7 +328,7 @@ async function getClientTypeGraph(req, res, next) {
     ];
 
     const clientTypes = await WorkshopRequest.aggregate(aggregatePipeline);
-    console.log(clientTypes);
+    console.log(`clientTypes: ${JSON.stringify(clientTypes)}`);
     return res.status(200).json(clientTypes);
   } catch (error) {
     console.log("error getting client types data:", error);
@@ -440,39 +422,92 @@ async function getWorkshopTrendDataGraph(req, res, next) {
   }
 }
 
+// async function getTrainerUtilGraph(req, res, next) {
+//   try {
+//     const aggregatePipeline = [
+//       {
+//         $lookup: {
+//           from: "workshoprequests",
+//           localField: "workshop_request",
+//           foreignField: "_id",
+//           as: "workshopsData",
+//         },
+//       },
+//       {
+//         $unwind: "$workshopsData",
+//       },
+//       {
+//         $unwind: "$workshopsData.utilisation",
+//       },
+//       {
+//         $group: {
+//           _id: "$_id",
+//           totalUtilisationHours: { $sum: "$workshopsData.utilisation.hours" },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           trainerID: "$_id",
+//           totalUtilisationHours: 1,
+//         },
+//       },
+//     ];
+//     const result = await Trainer.aggregate(aggregatePipeline);
+//     console.log(`result: ${JSON.stringify(result)}`);
+//     return res.status(200).json(result);
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({ message: "unable to get data" });
+//   }
+// }
+
 async function getTrainerUtilGraph(req, res, next) {
   try {
     const aggregatePipeline = [
       {
         $lookup: {
-          from: "workshoprequests",
-          localField: "workshop_request",
+          from: "trainers",
+          localField: "trainers",
           foreignField: "_id",
-          as: "workshopsData",
+          as: "trainerData",
         },
       },
       {
-        $unwind: "$workshopsData",
+        $unwind: "$trainerData",
       },
       {
-        $unwind: "$workshopsData.utilisation",
+        $unwind: "$utilisation",
       },
       {
         $group: {
-          _id: "$_id",
-          totalUtilisationHours: { $sum: "$workshopsData.utilisation.hours" },
+          _id: "$trainerData._id",
+          total_trainer_utilization: { $sum: "$utilisation.hours" },
+          name: { $first: "$trainerData.fullname" },
+          workshops_completed_total: {
+            $first: "$trainerData.workshops_completed_total",
+          },
+          ongoing_workshops: { $first: "$trainerData.ongoing_workshops" },
         },
       },
       {
         $project: {
           _id: 0,
-          trainerID: "$_id",
-          totalUtilisationHours: 1,
+          name: 1,
+          total_trainer_utilization: 1,
+          workshops_completed_total: 1,
+          ongoing_workshops: 1,
+        },
+      },
+      {
+        $sort: {
+          name: 1,
         },
       },
     ];
-    const result = await Trainer.aggregate(aggregatePipeline);
-    console.log(`result: ${JSON.stringify(result)}`);
+
+    const result = await WorkshopRequest.aggregate(aggregatePipeline);
+
     return res.status(200).json(result);
   } catch (error) {
     console.log(error);
