@@ -50,10 +50,8 @@ const updateTrainerUnavailableTimeslots = async (trainerId) => {
 
   const workshops = await WorkshopRequest.find({ trainers: trainerId });
   const newUnavailableTimeslots = workshops.map((workshop) => {
-    const startDate = new Date(workshop.start_date);
-    startDate.setDate(startDate.getDate() - 7);
     return {
-      start: startDate,
+      start: workshop.start_date,
       end: workshop.end_date,
     };
   });

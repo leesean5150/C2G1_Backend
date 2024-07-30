@@ -45,19 +45,15 @@ async function getAllAvailableTrainers(req, res) {
       return res.status(200).json([]);
     }
 
-    // Calculate 7 days after the start date
-    const sevenDaysAfterStart = new Date(start);
-    sevenDaysAfterStart.setDate(start.getDate() + 7);
-
     const trainers = await Trainer.find({
       availability: "Active",
       unavailableTimeslots: {
         $not: {
           $elemMatch: {
             $or: [
-              { start: { $gte: sevenDaysAfterStart, $lt: end } },
-              { end: { $gt: sevenDaysAfterStart, $lte: end } },
-              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } },
+              { start: { $gte: start, $lt: end } },
+              { end: { $gt: start, $lte: end } },
+              { start: { $lte: start }, end: { $gte: end } },
             ],
           },
         },
