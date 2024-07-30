@@ -36,7 +36,9 @@ async function getAllAvailableTrainers(req, res) {
     const currentDate = new Date();
 
     if (isNaN(start) || isNaN(end)) {
-      return res.status(400).json({ message: "Invalid date format. Please use YYYY-MM-DD." });
+      return res
+        .status(400)
+        .json({ message: "Invalid date format. Please use YYYY-MM-DD." });
     }
 
     if (start <= currentDate) {
@@ -53,9 +55,9 @@ async function getAllAvailableTrainers(req, res) {
         $not: {
           $elemMatch: {
             $or: [
-              { start: { $gte: sevenDaysAfterStart, $lt: end } }, 
-              { end: { $gt: sevenDaysAfterStart, $lte: end } }, 
-              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } }, 
+              { start: { $gte: sevenDaysAfterStart, $lt: end } },
+              { end: { $gt: sevenDaysAfterStart, $lte: end } },
+              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } },
             ],
           },
         },
@@ -265,12 +267,13 @@ async function adminUpdateTrainer(req, res) {
 }
 
 export default {
-  getAllTrainers,
-  adminActivateTrainer,
-  adminUpdateTrainer,
-  adminDeactivateTrainer,
   adminCreateTrainer,
+  adminActivateTrainer,
+  adminDeactivateTrainer,
+  getAllTrainers,
   getAllAvailableTrainers,
   adminDeleteTrainer,
+
+  adminUpdateTrainer,
   deleteAllTrainers,
 };

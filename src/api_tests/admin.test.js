@@ -1,6 +1,8 @@
 import supertest from "supertest";
 import initializeApp from "../app";
 import mongoose from "mongoose";
+import { Admin } from "../auth/models/Admin";
+import { Trainer } from "../auth/models/Trainer";
 
 describe("Testing Admin Functionality", () => {
   let app;
@@ -8,6 +10,26 @@ describe("Testing Admin Functionality", () => {
 
   beforeAll(async () => {
     app = await initializeApp();
+    const login = async (url, credentials) => {
+      const response = await supertest(app).post(url).send(credentials);
+      if (!response.headers["set-cookie"]) {
+        throw new Error(`${url} login failed: Set-Cookie header not found`);
+      }
+      return response;
+    };
+
+    const response_login = await login("/auth/login/admin", {
+      username: process.env.SUPERUSER_USERNAME,
+      password: process.env.SUPERUSER_PASSWORD,
+    });
+
+    const tokenCookie = response_login.headers["set-cookie"].find((cookie) =>
+      cookie.startsWith("token=")
+    );
+    if (!tokenCookie) {
+      throw new Error("Admin login failed: Token cookie not found");
+    }
+    tokenValue = tokenCookie.split("=")[1].split(";")[0];
   });
 
   afterAll(async () => {
@@ -22,22 +44,6 @@ describe("Testing Admin Functionality", () => {
     });
     expect(response.status).toBe(401);
     expect(response.body.message).toBe("Invalid username");
-  });
-
-  test("testing login with superuser account", async () => {
-    const response = await supertest(app).post("/auth/login/admin").send({
-      username: process.env.SUPERUSER_USERNAME,
-      password: process.env.SUPERUSER_PASSWORD,
-    });
-    const tokenCookie = response.headers["set-cookie"].find((cookie) =>
-      cookie.startsWith("token=")
-    );
-    tokenValue = tokenCookie.split("=")[1].split(";")[0];
-    expect(response.headers["set-cookie"]).toBeDefined();
-    expect(response.headers["content-type"]).toEqual(
-      expect.stringContaining("json")
-    );
-    expect(response.status).toBe(200);
   });
 
   test("testing verification of logged-in admin", async () => {
@@ -77,6 +83,75 @@ describe("Testing Admin Functionality", () => {
   });
 
   // create trainer account tests
+  test("Create trainer with valid data", async () => {
+    const response = await supertest(app)
+      .post("/auth/trainers")
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "newtrainer",
+        email: "newtrainer@example.com",
+        password: "password123",
+        fullname: "New Trainer",
+        trainer_role: "role",
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.username).toBe("newtrainer");
+    expect(response.body.email).toBe("newtrainer@example.com");
+  });
+
+  test("Create trainer with missing required fields", async () => {
+    const response = await supertest(app)
+      .post("/auth/trainers")
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "newtrainer2",
+        email: "newtrainer2@example.com",
+      });
+    expect(response.status).toBe(500);
+    expect(response.body.message).toBeDefined();
+  });
+
+  test("Create trainer with existing username or email", async () => {
+    // Create a trainer first
+    await supertest(app)
+      .post("/auth/trainers")
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "existingtrainer",
+        email: "existingtrainer@example.com",
+        password: "password123",
+        fullname: "Existing Trainer",
+        trainer_role: "role",
+      });
+
+    // Try to create another trainer with the same username
+    const response1 = await supertest(app)
+      .post("/auth/trainers")
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "existingtrainer",
+        email: "newemail@example.com",
+        password: "password123",
+        fullname: "New Trainer",
+        trainer_role: "role",
+      });
+    expect(response1.status).toBe(500);
+    expect(response1.body.message).toBeDefined();
+
+    // Try to create another trainer with the same email
+    const response2 = await supertest(app)
+      .post("/auth/trainers")
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "newusername",
+        email: "existingtrainer@example.com",
+        password: "password123",
+        fullname: "New Trainer",
+        trainer_role: "role",
+      });
+    expect(response2.status).toBe(500);
+    expect(response2.body.message).toBeDefined();
+  });
 
   // activate trainer account tests
 
@@ -87,4 +162,8 @@ describe("Testing Admin Functionality", () => {
   // get all available trainers tests
 
   // delete trainer account tests
+
+  // update trainer account tests
+
+  // delete all trainers tests
 });
