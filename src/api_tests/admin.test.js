@@ -332,6 +332,66 @@ describe("Testing Admin Functionality", () => {
     expect(response.body).toEqual(mockTrainers);
   });
 
+  // update trainer account tests
+  test("Update trainer with valid data", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/update/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "updatedtrainer",
+        email: "updatedtrainer@example.com",
+        fullname: "Updated Trainer",
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(true);
+    expect(response.body.message).toBe("Trainer updated successfully");
+  });
+
+  test("Update trainer with missing required fields", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/update/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send({});
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("No fields to update");
+  });
+
+  test("Update trainer with invalid ID", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/update/invalidid`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "updatedtrainer",
+        email: "updatedtrainer@example.com",
+        fullname: "Updated Trainer",
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid id");
+  });
+
+  test("Update trainer that does not exist", async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const response = await supertest(app)
+      .patch(`/auth/trainers/update/${nonExistentId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send({
+        username: "updatedtrainer",
+        email: "updatedtrainer@example.com",
+        fullname: "Updated Trainer",
+      });
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Trainer not found");
+  });
+
+  test("Update trainer with no fields to update", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/update/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`)
+      .send({});
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("No fields to update");
+  });
+
   // delete trainer account tests
   test("Delete trainer successfully", async () => {
     // Create a trainer first
@@ -378,8 +438,6 @@ describe("Testing Admin Functionality", () => {
     expect(response.status).toBe(400);
     expect(response.body.message).toBe("Invalid id");
   });
-
-  // update trainer account tests
 
   // delete all trainers tests
 });

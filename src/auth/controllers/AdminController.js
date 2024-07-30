@@ -197,6 +197,11 @@ async function adminDeleteTrainer(req, res) {
 async function adminUpdateTrainer(req, res) {
   try {
     const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
+
     const {
       username,
       email,
