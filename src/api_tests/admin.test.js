@@ -10,6 +10,11 @@ describe("Testing Admin Functionality", () => {
     app = await initializeApp();
   });
 
+  afterAll(async () => {
+    await mongoose.disconnect();
+  });
+
+  // login tests
   test("testing invalid login", async () => {
     const response = await supertest(app).post("/auth/login/admin").send({
       username: "invalidusername",
@@ -62,19 +67,6 @@ describe("Testing Admin Functionality", () => {
     expect(response.body.message).toBe("Unauthorized");
   });
 
-  test("testing creation trainer account", async () => {
-    // test the creation of a trainer account
-    // status should be 200
-    // maybe check if trainer list is non-zero?
-  });
-
-  test("testing allocation of trainer to workshop", async () => {
-    // create a workshop
-    // test the allocation of a trainer to a workshop
-    // status should be 200
-    // maybe check if workshop has a trainer?
-  });
-
   test("testing logout of admin account", async () => {
     const response = await supertest(app)
       .get("/auth/logout")
@@ -84,7 +76,15 @@ describe("Testing Admin Functionality", () => {
     expect(response.body.message).toBe("Logged out");
   });
 
-  afterAll(async () => {
-    await mongoose.disconnect();
-  });
+  // create trainer account tests
+
+  // activate trainer account tests
+
+  // deactivate trainer account tests
+
+  // get all trainers tests
+
+  // get all available trainers tests
+
+  // delete trainer account tests
 });
