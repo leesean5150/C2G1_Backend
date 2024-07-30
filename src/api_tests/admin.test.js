@@ -3,10 +3,12 @@ import initializeApp from "../app";
 import mongoose from "mongoose";
 import { Admin } from "../auth/models/Admin";
 import { Trainer } from "../auth/models/Trainer";
+import bcrypt from "bcryptjs";
 
 describe("Testing Admin Functionality", () => {
   let app;
   let tokenValue;
+  let trainerId;
 
   beforeAll(async () => {
     app = await initializeApp();
@@ -30,6 +32,10 @@ describe("Testing Admin Functionality", () => {
       throw new Error("Admin login failed: Token cookie not found");
     }
     tokenValue = tokenCookie.split("=")[1].split(";")[0];
+
+    // search for trainerId
+    trainerId = await Trainer.findOne({ username: "trainer1" }).exec();
+    trainerId = trainerId._id.toString();
   });
 
   afterAll(async () => {
@@ -153,9 +159,63 @@ describe("Testing Admin Functionality", () => {
     expect(response2.body.message).toBeDefined();
   });
 
-  // activate trainer account tests
-
   // deactivate trainer account tests
+  test("Deactivate trainer successfully", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/Deactivate/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(true);
+    expect(response.body.message).toBe("Trainer successfully deactivated");
+  });
+
+  test("Deactivate trainer that is already inactive", async () => {
+    // Try deactivating again
+    const response = await supertest(app)
+      .patch(`/auth/trainers/deactivate/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Trainer is already deactivated");
+  });
+
+  test("Deactivate trainer that does not exist", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/deactivate/invalidtrainerid`)
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid id");
+  });
+
+  // activate trainer account tests
+  test("Activate trainer successfully", async () => {
+    const response = await supertest(app)
+      .patch(`/auth/trainers/activate/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(true);
+    expect(response.body.message).toBe("Trainer activated successfully");
+
+    const updatedTrainer = await Trainer.findById(trainerId).exec();
+    expect(updatedTrainer.availability).toBe("Active");
+  });
+
+  test("Activate trainer that is already active", async () => {
+    // Try to activate again
+    const response = await supertest(app)
+      .patch(`/auth/trainers/activate/${trainerId}`)
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Trainer is already active");
+  });
+
+  test("Activate trainer that does not exist", async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const response = await supertest(app)
+      .patch(`/auth/trainers/activate/${nonExistentId}`)
+      .set("Cookie", `token=${tokenValue}`);
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Trainer not found");
+  });
 
   // get all trainers tests
 

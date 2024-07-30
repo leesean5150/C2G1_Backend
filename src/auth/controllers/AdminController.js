@@ -135,6 +135,11 @@ async function adminActivateTrainer(req, res) {
 async function adminDeactivateTrainer(req, res) {
   try {
     const { id } = req.params;
+
+    //validater id as mongoose id
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
     const trainer = await Trainer.findOne({ _id: id }).exec();
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
