@@ -36,7 +36,9 @@ async function getAllAvailableTrainers(req, res) {
     const currentDate = new Date();
 
     if (isNaN(start) || isNaN(end)) {
-      return res.status(400).json({ message: "Invalid date format. Please use YYYY-MM-DD." });
+      return res
+        .status(400)
+        .json({ message: "Invalid date format. Please use YYYY-MM-DD." });
     }
 
     if (start <= currentDate) {
@@ -53,9 +55,9 @@ async function getAllAvailableTrainers(req, res) {
         $not: {
           $elemMatch: {
             $or: [
-              { start: { $gte: sevenDaysAfterStart, $lt: end } }, 
-              { end: { $gt: sevenDaysAfterStart, $lte: end } }, 
-              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } }, 
+              { start: { $gte: sevenDaysAfterStart, $lt: end } },
+              { end: { $gt: sevenDaysAfterStart, $lte: end } },
+              { start: { $lte: sevenDaysAfterStart }, end: { $gte: end } },
             ],
           },
         },
@@ -133,6 +135,11 @@ async function adminActivateTrainer(req, res) {
 async function adminDeactivateTrainer(req, res) {
   try {
     const { id } = req.params;
+
+    //validater id as mongoose id
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
     const trainer = await Trainer.findOne({ _id: id }).exec();
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
@@ -265,12 +272,13 @@ async function adminUpdateTrainer(req, res) {
 }
 
 export default {
-  getAllTrainers,
-  adminActivateTrainer,
-  adminUpdateTrainer,
-  adminDeactivateTrainer,
   adminCreateTrainer,
+  adminActivateTrainer,
+  adminDeactivateTrainer,
+  getAllTrainers,
   getAllAvailableTrainers,
   adminDeleteTrainer,
+
+  adminUpdateTrainer,
   deleteAllTrainers,
 };
