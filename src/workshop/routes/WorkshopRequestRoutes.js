@@ -37,7 +37,9 @@ router.patch(
 );
 router.patch(
   "/reallocateTrainers/:id",
-  WorkshopRequestController.modifyAllocatedWorkshopsTrainers
+  verifyAdmin,
+  WorkshopRequestController.modifyAllocatedWorkshopsTrainers,
+  updateMultipleTrainersUnavailableTimeslots
 );
 router.patch("/:id", WorkshopRequestController.updatedWorkshopRequest);
 
