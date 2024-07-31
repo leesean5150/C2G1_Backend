@@ -17,7 +17,10 @@ router.get(
   WorkshopRequestController.getAllSubmittedWorkshops
 );
 router.get("/getApproved", WorkshopRequestController.getAllApprovedWorkshops);
-router.get("/getNonSubmitted", WorkshopRequestController.getNonSubmittedWorkshops);
+router.get(
+  "/getNonSubmitted",
+  WorkshopRequestController.getNonSubmittedWorkshops
+);
 router.get("/:id", WorkshopRequestController.getWorkshopRequest);
 router.post("/", WorkshopRequestController.createWorkshopRequest);
 router.patch(
@@ -31,6 +34,12 @@ router.patch(
   "/reject/:id",
   verifyAdmin,
   WorkshopRequestController.rejectRequest
+);
+router.patch(
+  "/reallocateTrainers/:id",
+  verifyAdmin,
+  WorkshopRequestController.modifyAllocatedWorkshopsTrainers,
+  updateMultipleTrainersUnavailableTimeslots
 );
 router.patch("/:id", WorkshopRequestController.updatedWorkshopRequest);
 

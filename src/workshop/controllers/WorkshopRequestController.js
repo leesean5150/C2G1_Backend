@@ -398,6 +398,112 @@ async function deleteAllWorkshopRequests(req, res, next) {
   }
 }
 
+async function modifyAllocatedWorkshopsTrainers(req, res, next) {
+  try {
+    const { trainerIds } = req.body;
+    const { id } = req.params;
+
+    if (trainerIds.length === 0) {
+      return res.status(400).json({ message: "No trainers provided" });
+    }
+
+    const workshop = await WorkshopRequest.findById(id);
+    if (!workshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    const workshop_start_date = new Date(workshop.start_date);
+    const workshop_end_date = new Date(workshop.end_date);
+
+    const allocatedTrainers = workshop.trainers.filter(
+      (trainer) => !trainerIds.includes(trainer.toString())
+    );
+
+    await Promise.all(
+      allocatedTrainers.map(async (trainerId) => {
+        const trainer = await Trainer.findById(trainerId);
+        if (!trainer) {
+          return; // Do nothing, or handle this case separately
+        }
+        const workshopIndex = trainer.workshop_request.indexOf(id);
+        if (workshopIndex !== -1) {
+          trainer.workshop_request.splice(workshopIndex, 1);
+        }
+        const unavailableIndex = trainer.unavailableTimeslots.findIndex(
+          (timeslot) =>
+            timeslot.start.getTime() === workshop_start_date.getTime() &&
+            timeslot.end.getTime() === workshop_end_date.getTime()
+        );
+        if (unavailableIndex !== -1) {
+          trainer.unavailableTimeslots.splice(unavailableIndex, 1);
+        }
+        await trainer.save();
+
+        const trainerIndex = workshop.trainers.indexOf(trainerId);
+        if (trainerIndex !== -1) {
+          workshop.trainers.splice(trainerIndex, 1);
+        }
+      })
+    );
+    await workshop.save();
+
+    const activeTrainers = [];
+    for (const trainerId of trainerIds) {
+      const trainer = await Trainer.findById(trainerId);
+      if (!trainer || !trainer.availability) continue;
+      const isTrainerUnavailable = trainer.unavailableTimeslots.some(
+        (timeslot) => {
+          return checkTimeslotOverlap(
+            workshop_start_date,
+            workshop_end_date,
+            timeslot.start,
+            timeslot.end
+          );
+        }
+      );
+
+      if (!isTrainerUnavailable) {
+        activeTrainers.push(trainerId);
+      }
+    }
+
+    if (activeTrainers.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No active and available trainers found" });
+    }
+
+    const updatedWorkshop = await WorkshopRequest.findByIdAndUpdate(
+      id,
+      { $addToSet: { trainers: { $each: activeTrainers } } },
+      { new: true }
+    );
+
+    if (!updatedWorkshop) {
+      return res.status(404).json({ message: "Workshop not found" });
+    }
+
+    await Promise.all(
+      activeTrainers.map((trainerId) =>
+        Trainer.findByIdAndUpdate(
+          trainerId,
+          { $addToSet: { workshop_request: id } },
+          { new: true }
+        )
+      )
+    );
+
+    await updateMultipleTrainersUnavailableTimeslots(req, res, next);
+
+    return res.json(updatedWorkshop);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Failed to modify trainers in the allocated workshops",
+    });
+  }
+}
+
 export default {
   getAllWorkshopRequests,
   getAllSubmittedWorkshops,
@@ -411,4 +517,5 @@ export default {
   addTrainers,
   approveRequest,
   rejectRequest,
+  modifyAllocatedWorkshopsTrainers,
 };
