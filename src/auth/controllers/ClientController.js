@@ -3,6 +3,7 @@ import { Client } from "../models/Client.js";
 async function getPendingWorkshops(req, res) {
   try {
     const client = await Client.findById(req.user.id)
+      .sort({ updatedAt: -1 })
       .populate("workshop_request")
       .exec();
     if (!client) {

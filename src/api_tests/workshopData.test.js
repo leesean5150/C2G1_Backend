@@ -40,9 +40,10 @@ describe("WorkshopData CRUD operations", () => {
 
     afterAll(async() => {
         try {
-            console.log("Closing database connection...");
             await mongoose.disconnect();
-            console.log("Database connection closed.");
+            if (app && app.close) {
+                await app.close();
+              }
         } catch (error) {
             console.error("Teardown error:", error);
         }

@@ -121,9 +121,10 @@ describe("WorkshopData CRUD operations", () => {
 
   afterAll(async () => {
     try {
-      console.log("Closing database connection...");
       await mongoose.disconnect();
-      console.log("Database connection closed.");
+      if (app && app.close) {
+        await app.close();
+      }
     } catch (error) {
       console.error("Teardown error:", error);
     }
@@ -238,8 +239,6 @@ describe("WorkshopData CRUD operations", () => {
   });
 
   test("should approve the WorkshopRequest and add trainers", async () => {
-    console.log(trainerIds);
-
     const response = await supertest(app)
       .patch(`/workshoprequest/approve/${workshopRequestId}`)
       .set("Cookie", `token=${tokenValue}`)
@@ -251,8 +250,6 @@ describe("WorkshopData CRUD operations", () => {
     expect(response.body).toHaveProperty("status", "approved");
     expect(response.body).toHaveProperty("trainers");
     expect(response.body.trainers.length).toBe(2);
-
-    console.log("Approved WorkshopRequest ID:", workshopRequestId); // Log the ID
   });
 
   test("should return list including single approved workshopRequest entity", async () => {
@@ -264,7 +261,8 @@ describe("WorkshopData CRUD operations", () => {
 
     expect(response.body.length).toBe(1);
     const workshopRequest = response.body[0];
-    expect(workshopRequest).toHaveProperty("status", "approved");
+    console.log(workshopRequest);
+    expect(workshopRequest[0].status).toBe("approved");
   });
 
   test("should reject the WorkshopRequest", async () => {

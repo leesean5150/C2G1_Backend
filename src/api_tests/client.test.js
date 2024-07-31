@@ -87,5 +87,8 @@ describe("Testing Client Endpoints", () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
+    if (app && app.close) {
+      await app.close();
+    }
   });
 });

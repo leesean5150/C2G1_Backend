@@ -82,6 +82,9 @@ describe("Testing Trainer Endpoints", () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
+    if (app && app.close) {
+      await app.close();
+    }
   });
 
   // trainer login tests
@@ -341,9 +344,6 @@ describe("Testing Trainer Endpoints", () => {
     const response = await supertest(app)
       .get("/auth/allocatedworkshops")
       .set("Cookie", `token=${tokenValue_trainer}`);
-
-    console.log("Mock called:", findByIdMock.mock.calls.length > 0); // Check if mock was called
-    console.log("Response body:", response.body); // Log the response body
 
     expect(response.status).toBe(200);
     expect(response.body.trainer_workshops).toEqual(

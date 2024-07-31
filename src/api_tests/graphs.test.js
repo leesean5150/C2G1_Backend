@@ -15,8 +15,6 @@ describe("Testing Graph Functionality", () => {
   let workshopSummaryIds = [];
 
   beforeAll(async () => {
-    try {
-      //1. Init App
       app = await initializeApp();
       if (!app) {
         throw new Error("App initialization failed");
@@ -173,16 +171,13 @@ describe("Testing Graph Functionality", () => {
       expect(addTrainerResponse.body).toHaveProperty("status", "approved");
       expect(addTrainerResponse.body).toHaveProperty("trainers");
       expect(addTrainerResponse.body.trainers.length).toBe(2);
-
-      console.log("Approved WorkshopRequest ID:", workshopRequestId); // Log the ID
-    } catch (error) {
-      console.error("Setup error:", error);
-      throw error;
-    }
   });
 
   afterAll(async () => {
     await mongoose.disconnect();
+    if (app && app.close) {
+      await app.close();
+    }
   });
 
   test("should create workshop summaries for all months and years", async () => {

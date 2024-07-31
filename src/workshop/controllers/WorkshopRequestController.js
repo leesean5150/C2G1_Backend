@@ -24,7 +24,9 @@ async function getAllSubmittedWorkshops(req, res, next) {
   try {
     const workshops = await WorkshopRequest.find({
       status: "submitted",
-    }).populate("workshop_data");
+    })
+      .sort({ updatedAt: -1 })
+      .populate("workshop_data");
     return res.status(200).json(workshops);
   } catch (error) {
     console.log(error);
@@ -36,7 +38,6 @@ async function getAllSubmittedWorkshops(req, res, next) {
 
 async function getAllApprovedWorkshops(req, res) {
   try {
-
     const data = [];
     const aggregatePipeline = [
       { $match: { status: "approved" } },
