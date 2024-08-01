@@ -916,3 +916,33 @@ db.workshoprequests.insertMany([
     client: clientClient._id,
   },
 ]);
+
+//repopulating trainer workshop requests
+const groupedWorkshopRequests = db.workshoprequests.aggregate([
+  {
+    $unwind: "$trainers",
+  },
+  {
+    $group: {
+      _id: "$trainers",
+      workshop_requests: {
+        $push: "$_id",
+      },
+    },
+  },
+]);
+
+while (groupedWorkshopRequests.hasNext()) {
+  const trainerWorkshopRequests = groupedWorkshopRequests.next();
+  console.log(
+    `Trainer ID: ${trainerWorkshopRequests._id}, Workshop Requests: ${trainerWorkshopRequests.workshop_requests}`
+  );
+  db.trainers.updateOne(
+    { _id: trainerWorkshopRequests._id },
+    {
+      $set: {
+        workshop_request: trainerWorkshopRequests.workshop_requests,
+      },
+    }
+  );
+}
