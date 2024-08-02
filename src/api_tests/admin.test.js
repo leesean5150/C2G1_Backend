@@ -34,7 +34,7 @@ describe("Testing Admin Functionality", () => {
     tokenValue = tokenCookie.split("=")[1].split(";")[0];
 
     // search for trainerId
-    trainerId = await Trainer.findOne({ username: "trainer1" }).exec();
+    trainerId = await Trainer.findOne({ username: "trainer" }).exec();
     trainerId = trainerId._id.toString();
   });
 
